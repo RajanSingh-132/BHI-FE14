@@ -5,17 +5,27 @@ export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
 /**
- * Generate or get session ID (persist in browser)
+ * Persist session ID in memory + localStorage (FIXED)
  */
-function getSessionId(): string {
-  let sessionId = localStorage.getItem("session_id");
+let SESSION_ID: string | null = null;
 
-  if (!sessionId) {
-    sessionId = crypto.randomUUID();
-    localStorage.setItem("session_id", sessionId);
+function getSessionId(): string {
+  // Return from memory if already set
+  if (SESSION_ID) return SESSION_ID;
+
+  // Try to get from localStorage
+  let stored = localStorage.getItem("session_id");
+
+  // If not present → create new
+  if (!stored) {
+    stored = crypto.randomUUID();
+    localStorage.setItem("session_id", stored);
   }
 
-  return sessionId;
+  // Save in memory
+  SESSION_ID = stored;
+
+  return SESSION_ID;
 }
 
 /**
@@ -31,9 +41,12 @@ export async function fetchApi<T>(
 
   const sessionId = getSessionId();
 
+  // 🔥 Debug (important for checking same session)
+  console.log("Session ID:", sessionId);
+
   const defaultHeaders: HeadersInit = {
     Accept: "application/json",
-    "X-Session-ID": sessionId, // 🔥 IMPORTANT
+    "X-Session-ID": sessionId,
   };
 
   // Only add Content-Type if NOT FormData
@@ -54,6 +67,7 @@ export async function fetchApi<T>(
   // Error handling
   if (!response.ok) {
     let errorMsg = `API Error: ${response.status} ${response.statusText}`;
+
     try {
       const errorData = await response.json();
       errorMsg = errorData.detail || errorData.message || errorMsg;
@@ -61,11 +75,13 @@ export async function fetchApi<T>(
       try {
         const textData = await response.text();
         if (textData) errorMsg = textData;
-      } catch { }
+      } catch {}
     }
+
     throw new Error(errorMsg);
   }
 
+  // Handle empty response
   if (response.status === 204) {
     return {} as T;
   }

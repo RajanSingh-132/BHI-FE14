@@ -17,14 +17,13 @@ export default function DashboardPage() {
   const [dragging, setDragging] = useState(false);
   const [uploaded, setUploaded] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const processFile = useCallback((file: File) => {
-    const allowed = ['text/csv', 'application/json', 'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
-    if (!allowed.includes(file.type) && !file.name.match(/\.(csv|json|xlsx|xls)$/i)) {
-      setAlert({ type: 'error', msg: 'Only CSV, JSON, or Excel files are supported.' });
+    if (!file.name.match(/\.(csv|xlsx|xls)$/i)) {
+      setAlert({ type: 'error', msg: 'Only CSV or Excel files are supported.' });
       return;
     }
     setUploaded(file);
@@ -37,16 +36,96 @@ export default function DashboardPage() {
     if (file) processFile(file);
   }, [processFile]);
 
-  // Clean object keys: remove NULL bytes, trim whitespace, drop empty keys
-  const cleanRow = (row: Record<string, any>): Record<string, any> => {
-    const cleaned: Record<string, any> = {};
-    for (const [key, value] of Object.entries(row)) {
-      const cleanKey = key.replace(/\0/g, '').trim();
-      if (cleanKey) {
-        cleaned[cleanKey] = value;
-      }
-    }
+  const sanitizeHeader = (header: unknown, index: number): string => {
+    const cleaned = String(header ?? '').replace(/\0/g, '').trim();
+    if (!cleaned || cleaned.toLowerCase() === 'null') return `column_${index + 1}`;
     return cleaned;
+  };
+
+  const normalizeCellValue = (value: unknown): string | number | null => {
+    if (value === undefined || value === null) return null;
+    if (value instanceof Date) return value.toISOString();
+    if (typeof value === 'string') {
+      const cleaned = value.replace(/\0/g, '').trim();
+      return cleaned === '' ? null : cleaned;
+    }
+    if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+    if (typeof value === 'boolean') return value ? 'true' : 'false';
+    return String(value);
+  };
+
+  const buildRecordsFromRows = (rows: unknown[][]): Record<string, string | number | null>[] => {
+    if (!rows.length) return [];
+
+    const normalizedRows = rows.filter(Array.isArray) as unknown[][];
+    if (!normalizedRows.length) return [];
+
+    const headerRow = normalizedRows[0] ?? [];
+    const dataRows = normalizedRows.slice(1);
+    const totalColumns = Math.max(
+      headerRow.length,
+      ...dataRows.map(row => row.length),
+      0,
+    );
+
+    const baseHeaders = Array.from({ length: totalColumns }, (_, idx) => sanitizeHeader(headerRow[idx], idx));
+    const nameCounter = new Map<string, number>();
+    const headers = baseHeaders.map((name) => {
+      const count = (nameCounter.get(name) || 0) + 1;
+      nameCounter.set(name, count);
+      return count === 1 ? name : `${name}_${count}`;
+    });
+
+    return dataRows
+      .map((row) => {
+        const record: Record<string, string | number | null> = {};
+        headers.forEach((header, idx) => {
+          record[header] = normalizeCellValue(row[idx]);
+        });
+        return record;
+      })
+      .filter(record => Object.values(record).some(v => v !== null && v !== ''));
+  };
+
+  const parseCsvFile = (file: File): Promise<Record<string, string | number | null>[]> => {
+    return new Promise((resolve, reject) => {
+      Papa.parse(file, {
+        skipEmptyLines: 'greedy',
+        dynamicTyping: true,
+        complete: (results) => {
+          try {
+            const rows = (results.data as unknown[]).map((row) => {
+              if (Array.isArray(row)) return row;
+              if (row && typeof row === 'object') return Object.values(row);
+              return [];
+            });
+            resolve(buildRecordsFromRows(rows));
+          } catch (error) {
+            reject(error);
+          }
+        },
+        error: reject,
+      });
+    });
+  };
+
+  const parseExcelFile = async (file: File): Promise<Record<string, string | number | null>[]> => {
+    const XLSX = await import('xlsx');
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array', raw: true, cellDates: true });
+    const firstSheetName = workbook.SheetNames[0];
+
+    if (!firstSheetName) return [];
+
+    const worksheet = workbook.Sheets[firstSheetName];
+    const rows = XLSX.utils.sheet_to_json(worksheet, {
+      header: 1,
+      raw: true,
+      defval: null,
+      blankrows: false,
+    }) as unknown[][];
+
+    return buildRecordsFromRows(rows);
   };
 
   const handleNext = async () => {
@@ -57,87 +136,53 @@ export default function DashboardPage() {
     setUploading(true);
 
     try {
-      const isJSON = uploaded.name.match(/\.json$/i);
-      const isCSV = uploaded.name.match(/\.(csv)$/i);
+      const isExcel = uploaded.name.match(/\.(xlsx|xls)$/i);
+      const parsedData = isExcel ? await parseExcelFile(uploaded) : await parseCsvFile(uploaded);
 
-      if (isJSON) {
-        // JSON file: read and parse directly
-        const text = await uploaded.text();
-        console.log('[Upload] Reading JSON file:', uploaded.name);
-        let rawData = JSON.parse(text);
-
-        // Ensure it's an array
-        if (!Array.isArray(rawData)) rawData = [rawData];
-
-        const cleanedData = rawData.map((row: any) => cleanRow(row));
-        console.log(`[Upload] Cleaned ${cleanedData.length} rows from JSON`);
-
-        await fetchApi<any>('/api/upload-json', {
-          method: 'POST',
-          body: JSON.stringify({
-            files: [{ file_name: uploaded.name, data: cleanedData }],
-          }),
-        });
-
-        const ds: Dataset = {
-          name: uploaded.name,
-          size: uploaded.size,
-          type: uploaded.type || 'application/json',
-          uploadedAt: new Date(),
-          data: cleanedData,
-        };
-        setDataset(ds);
-        setUploading(false);
-        console.log('[Upload] JSON upload successful, navigating...');
-        router.push('/analysis/leads');
-
-      } else {
-        // CSV (or Excel-like) file: parse with PapaParse
-        console.log('[Upload] Parsing CSV file:', uploaded.name);
-        Papa.parse(uploaded, {
-          header: true,
-          skipEmptyLines: true,
-          complete: async (results) => {
-            try {
-              console.log(`[Upload] PapaParse returned ${results.data.length} rows`);
-              const cleanedData = (results.data as Record<string, any>[]).map(cleanRow);
-              console.log(`[Upload] Cleaned ${cleanedData.length} rows`);
-
-              await fetchApi<any>('/api/upload-json', {
-                method: 'POST',
-                body: JSON.stringify({
-                  files: [{ file_name: uploaded.name, data: cleanedData }],
-                }),
-              });
-
-              const ds: Dataset = {
-                name: uploaded.name,
-                size: uploaded.size,
-                type: uploaded.type || 'text/csv',
-                uploadedAt: new Date(),
-                data: cleanedData,
-              };
-              setDataset(ds);
-              setUploading(false);
-              console.log('[Upload] CSV upload successful, navigating...');
-              router.push('/analysis/leads');
-            } catch (error: any) {
-              console.error('[Upload] Failed to send parsed CSV:', error);
-              setAlert({ type: 'error', msg: `Upload failed: ${error.message || 'Server error'}` });
-              setUploading(false);
-            }
-          },
-          error: (error) => {
-            console.error('[Upload] PapaParse error:', error);
-            setAlert({ type: 'error', msg: `File parse failed: ${error.message}` });
-            setUploading(false);
-          },
-        });
+      if (!parsedData.length) {
+        setAlert({ type: 'error', msg: 'No valid data rows found. Please check header and data rows in the file.' });
+        return;
       }
+
+      await fetchApi<any>('/api/upload-json', {
+        method: 'POST',
+        body: JSON.stringify({
+          files: [{ file_name: uploaded.name, data: parsedData }],
+        }),
+      });
+
+      const ds: Dataset = {
+        name: uploaded.name,
+        size: uploaded.size,
+        type: uploaded.type || (isExcel ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv'),
+        uploadedAt: new Date(),
+        data: parsedData,
+      };
+      setDataset(ds);
+      console.log('[Upload] Upload successful, navigating...');
+      router.push('/analysis/leads');
     } catch (error: any) {
       console.error('[Upload] Unexpected error:', error);
       setAlert({ type: 'error', msg: `Upload failed: ${error.message || 'Server error'}` });
+    } finally {
       setUploading(false);
+    }
+  };
+
+  const handleReset = async () => {
+    if (resetting) return;
+    setResetting(true);
+
+    try {
+      await fetchApi('/api/reset-session', { method: 'POST' });
+      setUploaded(null);
+      setDataset(null);
+      setAlert({ type: 'success', msg: 'Session reset successfully. You can upload a new dataset.' });
+    } catch (error: any) {
+      console.error('[Reset] Failed to reset session:', error);
+      setAlert({ type: 'error', msg: `Reset failed: ${error.message || 'Server error'}` });
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -147,19 +192,14 @@ export default function DashboardPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '16px', marginBottom: '32px' }}>
         {[
-          { label: 'Total Datasets', value: dataset ? '1' : '0', icon: '◈', color: '#3b82f6' },
-          { label: 'Last Analysed', value: dataset ? 'Just now' : '—', icon: '◎', color: '#10b981' },
-          { label: 'Reports Generated', value: dataset ? '—' : '0', icon: '◇', color: '#f59e0b' },
-          { label: 'Insights Found', value: dataset ? '—' : '0', icon: '⬡', color: '#a855f7' },
+          { label: 'Total Datasets', value: dataset ? '1' : '0', color: '#3b82f6' },
+          { label: 'Last Analysed', value: dataset ? 'Just now' : '—', color: '#10b981' },
+          { label: 'Reports Generated', value: dataset ? '—' : '0', color: '#f59e0b' },
+          { label: 'Insights Found', value: dataset ? '—' : '0', color: '#a855f7' },
         ].map(s => (
           <Card key={s.label}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px', letterSpacing: '1px' }}>{s.label.toUpperCase()}</div>
-                <div style={{ fontSize: '28px', fontFamily: 'Syne, sans-serif', fontWeight: 800, color: s.color }}>{s.value}</div>
-              </div>
-              <div style={{ fontSize: '24px', color: s.color, opacity: 0.6 }}>{s.icon}</div>
-            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px', letterSpacing: '1px' }}>{s.label.toUpperCase()}</div>
+            <div style={{ fontSize: '28px', fontFamily: 'Inter, sans-serif', fontWeight: 800, color: s.color }}>{s.value}</div>
           </Card>
         ))}
       </div>
@@ -168,7 +208,7 @@ export default function DashboardPage() {
         <div style={{ marginBottom: '20px' }}>
           <h2 style={{ fontFamily: 'Syne,sans-serif', fontSize: '18px', fontWeight: 700, marginBottom: '4px' }}>Upload Dataset</h2>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-            Upload your business data file to begin the analysis pipeline. Supports CSV, JSON, XLSX.
+            Upload your business data file to begin the analysis pipeline. Supports CSV, XLSX.
           </p>
         </div>
 
@@ -186,7 +226,7 @@ export default function DashboardPage() {
             boxShadow: dragging ? '0 0 24px var(--accent)22' : 'none',
           }}
         >
-          <input ref={fileRef} type="file" accept=".csv,.json,.xlsx,.xls" hidden
+          <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" hidden
             onChange={e => e.target.files?.[0] && processFile(e.target.files[0])} />
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>
             {uploaded ? '✓' : dragging ? '↓' : '⬡'}
@@ -204,7 +244,7 @@ export default function DashboardPage() {
               </div>
               <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>or click to browse files</div>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-                {['CSV', 'JSON', 'XLSX', 'XLS'].map(t => (
+                {['CSV', 'XLSX', 'XLS'].map(t => (
                   <span key={t} style={{
                     padding: '4px 10px', borderRadius: '6px', fontSize: '11px',
                     background: 'var(--bg-card)', border: '1px solid var(--border)',
@@ -224,9 +264,7 @@ export default function DashboardPage() {
         )}
 
         <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-          {uploaded && (
-            <Button variant="ghost" onClick={() => { setUploaded(null); setAlert(null); }}>Clear</Button>
-          )}
+          <Button variant="ghost" onClick={handleReset} loading={resetting}>Reset</Button>
           <Button size="lg" onClick={handleNext} loading={uploading} style={{ minWidth: '140px' }}>
             Next →
           </Button>
@@ -235,7 +273,7 @@ export default function DashboardPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
         {[
-          { step: '01', title: 'Upload Dataset', desc: 'Drag & drop or browse your CSV, JSON, or Excel business data file.' },
+          { step: '01', title: 'Upload Dataset', desc: 'Drag & drop or browse your CSV or Excel business data file.' },
           { step: '02', title: 'Run Analysis', desc: 'BHI AI engine analyses your leads, revenue, and ads data automatically.' },
           { step: '03', title: 'Get Insights', desc: 'View rich visual reports and actionable business intelligence.' },
         ].map(item => (
