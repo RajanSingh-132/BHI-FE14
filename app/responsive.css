@@ -1,0 +1,37 @@
+/* Mobile Responsive Overrides */
+
+@media (max-width: 768px) {
+    .container-responsive {
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+    }
+
+    .hide-on-mobile {
+        display: none !important;
+    }
+
+    .show-on-mobile {
+        display: flex !important;
+    }
+
+    .mobile-stack {
+        flex-direction: column !important;
+    }
+
+    .full-width-mobile {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+/* Custom styles for the mobile bottom navigation bar */
+.bottom-nav-blur {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.active-nav-item {
+    color: #065f46;
+    background: #ecfdf5;
+}
