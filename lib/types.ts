@@ -3,22 +3,42 @@ export interface Dataset {
 }
 export interface DatasetRow { [key: string]: string | number | null; }
 
-export interface LeadSource { source: string; count: number; percentage: number; }
-export interface LeadStatus { status: string; count: number; }
+export interface LeadSource { 
+    source: string; 
+    count: number; 
+    percentage: number; 
+    revenue?: number; 
+    cost?: number;
+    profit?: number;
+    totalRevenue?: number;
+    won?: number; 
+    qualified?: number; 
+    contacted?: number; 
+}
+export interface LeadStatus { status: string; count: number; revenue?: number; }
 export interface MonthlyLead { month: string; leads: number; }
 
 export interface LeadMetrics {
     totalLeads: number;
     qualifiedLeads: number;
     convertedLeads: number;
+    contactedLeads?: number;
+    totalRevenue?: number;
+    wonRevenue?: number;
+    qualifiedRevenue?: number;
+    contactedRevenue?: number;
     conversionRate: number;
     avgLeadScore: number;
     costPerLead: number;
     topSources: LeadSource[];
-    byStatus: LeadStatus[];
+    sourceLabels?: { won: string; qualified: string };
+    byStatus?: LeadStatus[];
+    bySource: LeadSource[];
     monthlyTrend: MonthlyLead[];
     bestLead: LeadSource | null;
     worstLead: LeadSource | null;
+    bestRevenueLead: LeadSource | null;
+    worstRevenueLead: LeadSource | null;
 }
 
 export interface RegionRevenue { region: string; revenue: number; }
@@ -61,4 +81,4 @@ export interface AdsMetrics {
     worstCampaign: CampaignData | null;
 }
 
-export type AnalysisStep = 'upload' | 'leads' | 'revenue' | 'ads' | 'summary';
+export type AnalysisStep = 'upload' | 'leads' | 'Sales' | 'ads' | 'summary';

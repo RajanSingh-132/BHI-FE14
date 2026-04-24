@@ -12,7 +12,7 @@ export default function MobileNav() {
   const navItems = [
     { label: 'UPLOAD', href: '/', id: 'upload', icon: Upload },
     { label: 'LEADS', href: '/analysis/leads', id: 'leads', icon: BarChart3 },
-    { label: 'REVENUE', href: '/analysis/revenue', id: 'revenue', icon: TrendingUp },
+    { label: 'Sales', href: '/analysis/Sales', id: 'Sales', icon: TrendingUp },
     { label: 'ADS', href: '/analysis/ads', id: 'ads', icon: Megaphone },
     { label: 'SUMMARY', href: '/analysis/summary', id: 'summary', icon: FileText }
   ];

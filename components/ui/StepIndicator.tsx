@@ -3,7 +3,7 @@
 const steps = [
     { id: 'upload', label: 'Upload Dataset' },
     { id: 'leads', label: 'Leads Analysis' },
-    { id: 'revenue', label: 'Revenue Analysis' },
+    { id: 'Sales', label: 'Sales Analysis' },
     { id: 'ads', label: 'Ads Analysis' },
     { id: 'summary', label: 'Full Analysis' },
 ];

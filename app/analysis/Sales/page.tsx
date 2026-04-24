@@ -76,7 +76,7 @@ export default function RevenuePage() {
 
             <div className="flex-1 p-4 md:p-8 space-y-6 md:space-y-8">
                 
-                {/* Dynamic Top KPI Grid */}
+                {/* Dynamic Top KPI Grid - Commented out per user request
                 {kpis.length > 0 && (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
                         {kpis.map(kpi => {
@@ -97,6 +97,7 @@ export default function RevenuePage() {
                         })}
                     </div>
                 )}
+                */}
 
                 {/* Best / Worst Revenue Insights */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
@@ -151,7 +152,7 @@ export default function RevenuePage() {
                                                 </div>
                                             </div>
                                             <div 
-                                                className="w-full bg-amber-400 dark:bg-amber-600 rounded-t-lg shadow-sm" 
+                                                className="w-full bg-slate-400 dark:bg-slate-600 rounded-t-lg shadow-sm" 
                                                 style={{ height: `${Math.max(h, 5)}%` }} 
                                             />
                                         </div>

@@ -14,7 +14,7 @@ export function HeaderContent() {
   const navItems = [
     { label: 'Upload', href: '/', id: 'upload' },
     { label: 'Leads', href: '/analysis/leads', id: 'leads' },
-    { label: 'Revenue', href: '/analysis/revenue', id: 'revenue' },
+    { label: 'Sales', href: '/analysis/Sales', id: 'Sales' },
     { label: 'Ads', href: '/analysis/ads', id: 'ads' },
     { label: 'Summary', href: '/analysis/summary', id: 'summary' }
   ];
@@ -58,7 +58,7 @@ export function HeaderContent() {
       </nav>
 
       <div className="flex-1 flex items-center justify-end gap-3 md:gap-6">
-        <button 
+        <button
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleTheme(); }}
           type="button"
           aria-label="Toggle Theme"
@@ -66,7 +66,7 @@ export function HeaderContent() {
         >
           {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
         </button>
-        
+
         <button className="hidden sm:flex bg-none border-none cursor-pointer items-center justify-center text-[var(--text-secondary)]">
           <Bell size={20} />
         </button>
