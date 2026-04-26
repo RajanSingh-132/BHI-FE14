@@ -208,6 +208,32 @@ export default function LeadsPage() {
                                     </div>
                                 </div>
                             )}
+
+                            {metrics?.bestUserLead && metrics.bestUserLead.userName && (
+                                <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/20 rounded-2xl p-5 shadow-sm flex items-center gap-5 translate-y-0 hover:-translate-y-1 transition-transform">
+                                    <div className="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-100">
+                                        <UserCheck size={24} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Best User (Leads)</h4>
+                                        <div className="text-lg font-black text-blue-900 dark:text-blue-100 truncate">{metrics.bestUserLead.userName}</div>
+                                        <div className="text-[10px] font-bold text-blue-600/70 mt-0.5 uppercase tracking-tight">{metrics.bestUserLead.leads.toLocaleString()} TOTAL LEADS</div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {metrics?.bestUserRevenue && metrics.bestUserRevenue.userName && (
+                                <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 rounded-2xl p-5 shadow-sm flex items-center gap-5 translate-y-0 hover:-translate-y-1 transition-transform">
+                                    <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-emerald-100">
+                                        <Trophy size={24} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Best User (Revenue)</h4>
+                                        <div className="text-lg font-black text-emerald-900 dark:text-emerald-100 truncate">{metrics.bestUserRevenue.userName}</div>
+                                        <div className="text-[10px] font-bold text-emerald-600/70 mt-0.5 uppercase tracking-tight">₹{metrics.bestUserRevenue.revenue.toLocaleString()} REVENUE GENERATED</div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 

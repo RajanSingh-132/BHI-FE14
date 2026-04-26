@@ -39,6 +39,8 @@ export interface LeadMetrics {
     worstLead: LeadSource | null;
     bestRevenueLead: LeadSource | null;
     worstRevenueLead: LeadSource | null;
+    bestUserLead?: { userName: string; leads: number } | null;
+    bestUserRevenue?: { userName: string; revenue: number } | null;
 }
 
 export interface RegionRevenue { region: string; revenue: number; }
