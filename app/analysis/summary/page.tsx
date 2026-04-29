@@ -16,12 +16,12 @@ export default function SummaryPage() {
 
     useEffect(() => {
         if (!dataset) { setLoading(false); return; }
-        
+
         const loadAll = async () => {
             try {
                 const [lRes, rRes, aRes] = await Promise.all([
                     fetchApi<{ metrics: LeadMetrics }>('/api/analytics?type=leads'),
-                    fetchApi<{ metrics: RevenueMetrics }>('/api/analytics?type=revenue'),
+                    fetchApi<{ metrics: RevenueMetrics }>('/api/analytics?type=Sales'),
                     fetchApi<{ metrics: AdsMetrics }>('/api/analytics?type=ads')
                 ]);
                 setLeads(lRes.metrics);
@@ -33,22 +33,22 @@ export default function SummaryPage() {
                 setLoading(false);
             }
         };
-        
+
         loadAll();
     }, [dataset]);
 
     if (!dataset) return <div className="h-full flex items-center justify-center p-10 font-bold text-[var(--text-muted)] uppercase tracking-widest bg-[var(--bg)]">Waiting for synchronization...</div>;
     if (loading) return <div className="h-full flex items-center justify-center p-10 font-bold text-[var(--accent)] uppercase tracking-widest animate-pulse bg-[var(--bg)]">Generating Strategic Report...</div>;
 
-    const healthScore = 84; 
+    const healthScore = 84;
 
     return (
         <div className="h-full flex flex-col bg-[var(--bg)] text-[var(--text-primary)] overflow-y-auto pb-24 md:pb-10">
             {/* Header Section */}
             <div className="hidden md:flex px-8 pt-6 pb-2 border-b border-[var(--border)] justify-between items-center gap-4 shrink-0">
                 <div>
-                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">PAGE 05</span>
-                     <h1 className="text-4xl font-black tracking-tight text-gray-900 leading-none">Strategic Summary</h1>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">PAGE 05</span>
+                    <h1 className="text-4xl font-black tracking-tight text-gray-900 leading-none">Strategic Summary</h1>
                 </div>
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-3 bg-[var(--accent-soft)] text-[var(--accent)] px-5 py-2.5 rounded-2xl shadow-sm border border-[var(--accent)]/10">
@@ -116,7 +116,7 @@ export default function SummaryPage() {
                 {/* strategic card */}
                 <div className="mt-4 bg-zinc-900 rounded-[2.5rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-zinc-800">
                     <div className="absolute top-0 right-0 p-8 text-emerald-900/10 pointer-events-none"><CheckCircle size={200} strokeWidth={1} /></div>
-                    
+
                     <div className="relative z-10 flex flex-col lg:flex-row gap-12 lg:items-center">
                         <div className="flex-1 space-y-8">
                             <div className="flex items-center gap-4">
@@ -137,7 +137,7 @@ export default function SummaryPage() {
                             <button className="bg-white text-zinc-900 px-10 py-4 rounded-2xl group flex items-center justify-center gap-3 font-black text-xs transition-transform hover:scale-[1.02]">
                                 DOWNLOAD FULL AUDIT <Download size={18} />
                             </button>
-                            <button 
+                            <button
                                 onClick={() => router.push('/')}
                                 className="bg-zinc-800 hover:bg-zinc-700 text-white px-10 py-4 rounded-2xl font-black transition-all text-xs border border-zinc-700 shadow-lg"
                             >
@@ -150,8 +150,8 @@ export default function SummaryPage() {
 
             {/* Footer Navigation */}
             <div className="md:px-8 md:py-6 md:border-t md:border-gray-100 flex justify-between items-center p-4">
-                <button 
-                    onClick={() => router.push('/analysis/ads')} 
+                <button
+                    onClick={() => router.push('/analysis/ads')}
                     className="hidden md:flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest"
                 >
                     <ArrowLeft size={16} /> PREVIOUS

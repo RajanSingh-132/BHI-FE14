@@ -6,6 +6,7 @@ import { LeadMetrics } from '@/lib/types';
 import { fetchApi } from '@/lib/api';
 import { ArrowLeft, ArrowRight, TrendingUp, Users, Target, BarChart3, Star, Zap, Sparkles, Trophy, AlertCircle, Quote, Receipt, UserCheck, Info, CheckCircle } from 'lucide-react';
 import StepIndicator from '@/components/ui/StepIndicator';
+import LeadTrendChart from '@/components/charts/LeadTrendChart';
 
 const COLORS = ['#f59e0b', '#fbbf24', '#d97706', '#92400e', '#78350f'];
 
@@ -52,23 +53,6 @@ export default function LeadsPage() {
 
     // Dynamic Chart Data Calculations
     const trendData = metrics?.monthlyTrend || [];
-    const maxVal = Math.max(...trendData.map(d => d.leads), 10);
-
-    // Generate Path for Desktop Line Chart
-    const points = trendData.map((d, i) => ({
-        x: (i / Math.max(trendData.length - 1, 1)) * 1000,
-        y: 250 - (d.leads / maxVal) * 200,
-        val: d.leads,
-        label: d.month
-    }));
-
-    const linePath = points.length > 0
-        ? `M${points[0].x},${points[0].y} ` + points.slice(1).map(p => `L${p.x},${p.y}`).join(' ')
-        : '';
-
-    const areaPath = points.length > 0
-        ? `${linePath} L1000,250 L0,250 Z`
-        : '';
 
     // Lookup byStatus buckets by canonical name (not index)
     const wonStatus = metrics?.byStatus?.find(s => s.status === 'Won');
@@ -90,6 +74,7 @@ export default function LeadsPage() {
     const rev3Label = 'CONT. REVENUE';
     const rev3Value = contactedStatus?.revenue ?? metrics?.contactedRevenue ?? 0;
 
+
     const dynamicKPIs = [
         // Row 1: Counts
         { label: 'Total Leads', value: metrics?.totalLeads ?? 0, icon: Users, bg: 'bg-amber-50', color: 'text-amber-600' },
@@ -103,6 +88,7 @@ export default function LeadsPage() {
         { label: rev1Label, value: `₹${rev1Value.toLocaleString()}`, icon: TrendingUp, bg: 'bg-emerald-50', color: 'text-emerald-600' },
         { label: rev2Label, value: `₹${rev2Value.toLocaleString()}`, icon: TrendingUp, bg: 'bg-blue-50', color: 'text-blue-600' },
         { label: rev3Label, value: `₹${rev3Value.toLocaleString()}`, icon: Users, bg: 'bg-indigo-50', color: 'text-indigo-600' },
+
         { label: 'Cost/Lead', value: `₹${metrics?.costPerLead ?? 0}`, icon: TrendingUp, bg: 'bg-rose-50', color: 'text-rose-600' },
     ];
 
@@ -156,6 +142,9 @@ export default function LeadsPage() {
 
                     {/* TOP ON MOBILE: Performance Insights */}
                     <div className="order-1 lg:order-2 lg:col-span-1 space-y-6">
+                        <div className="flex items-center justify-between px-1">
+                            <h3 className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Based on WON lead</h3>
+                        </div>
                         <div className="grid grid-cols-1 gap-4">
                             {metrics?.bestLead && metrics.bestLead.source && (
                                 <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 rounded-2xl p-5 shadow-sm flex items-center gap-5 translate-y-0 hover:-translate-y-1 transition-transform">
@@ -239,94 +228,34 @@ export default function LeadsPage() {
 
                     {/* SECOND ON MOBILE: Lead Acquisition Trends */}
                     <div className="order-2 lg:order-1 lg:col-span-2">
-                        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm relative overflow-hidden group/chart h-full flex flex-col">
+                        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm relative overflow-hidden group/chart h-full flex flex-col min-h-[400px]">
                             <div className="flex justify-between items-start mb-6 md:mb-8">
                                 <div>
                                     <h3 className="text-base md:text-lg font-bold text-[var(--text-primary)] uppercase tracking-tight">Lead Acquisition Trends</h3>
-                                    <div className="md:hidden mt-1 px-2 py-0.5 bg-[var(--bg-secondary)] text-[var(--text-muted)] rounded text-[9px] font-bold inline-block uppercase">{trendData.length > 0 ? 'DYNAMIC DATA' : '30D GROWTH'}</div>
+                                    <div className="mt-1 px-2 py-0.5 bg-[var(--bg-secondary)] text-[var(--text-muted)] rounded text-[9px] font-bold inline-block uppercase">MONTHLY PERFORMANCE</div>
                                 </div>
-                                <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-600 rounded-full text-[10px] font-bold">
-                                    <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
-                                    VERIFIED LEADS
+                                <div className="hidden md:flex items-center gap-4">
+                                    <div className="flex items-center gap-1.5 text-[9px] font-black text-emerald-600 uppercase tracking-tighter">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> WON
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-[9px] font-black text-blue-600 uppercase tracking-tighter">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500" /> QUALIFIED
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-[9px] font-black text-amber-600 uppercase tracking-tighter">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500" /> CONTACTED
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Removed tooltips */}
-
-                            {/* Responsive Chart: Line on Desktop, Bars on Mobile */}
-                            <div className="flex-1 min-h-[220px] md:min-h-[250px] w-full relative">
-                                {/* Mobile Dynamic Bars with Static Values */}
-                                <div className="flex md:hidden items-end justify-between h-full w-full gap-2 px-1 pb-10">
-                                    {trendData.length > 0 ? trendData.map((d, i) => (
-                                        <div
-                                            key={i}
-                                            className="flex-1 h-full flex flex-col items-center justify-end group/bar"
-                                        >
-                                            <span className="text-[8px] font-bold text-amber-600 mb-1">{d.leads.toLocaleString()}</span>
-                                            <div
-                                                className="w-full rounded-t-md bg-amber-400 dark:bg-amber-600 shadow-sm"
-                                                style={{ height: `${Math.max((d.leads / maxVal) * 100, 5)}%` }}
-                                            />
-                                        </div>
-                                    )) : (
-                                        <div className="w-full h-full flex flex-col items-center justify-center text-[var(--text-muted)] italic text-xs gap-2">
-                                            <Info size={20} className=" opacity-10" />
-                                            No trend data available for this dataset
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Desktop Dynamic Line with Points & Labels */}
-                                {trendData.length > 0 && (
-                                    <div className="hidden md:block w-full h-full relative">
-                                        <svg className="w-full h-full overflow-visible" viewBox="0 0 1000 250" preserveAspectRatio="none">
-                                            <defs>
-                                                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.2" />
-                                                    <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
-                                                </linearGradient>
-                                            </defs>
-                                            <path d={areaPath} fill="url(#chartGradient)" />
-                                            <path d={linePath} fill="none" stroke="#f59e0b" strokeWidth="4" strokeLinecap="round" />
-
-                                            {/* Interaction Points */}
-                                            {points.map((p, i) => (
-                                                <g key={i}>
-                                                    {/* Value Label */}
-                                                    <text x={p.x} y={p.y - 15} textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="bold">
-                                                        {p.val.toLocaleString()}
-                                                    </text>
-                                                    {/* Visible Point */}
-                                                    <circle
-                                                        cx={p.x}
-                                                        cy={p.y}
-                                                        r="5"
-                                                        fill="white"
-                                                        stroke="#f59e0b"
-                                                        strokeWidth="2.5"
-                                                    />
-                                                </g>
-                                            ))}
-                                        </svg>
+                            <div className="flex-1 w-full relative">
+                                {trendData.length > 0 ? (
+                                    <LeadTrendChart data={trendData} />
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center text-[var(--text-muted)] italic text-xs gap-2">
+                                        <Info size={20} className=" opacity-10" />
+                                        No trend data available for this dataset
                                     </div>
                                 )}
-
-                                <div className="absolute bottom-0 left-0 right-0 flex justify-between text-[8px] md:text-[10px] font-black text-[var(--text-muted)] pt-4 border-t border-[var(--border)] uppercase tracking-tighter overflow-hidden">
-                                    {trendData.length > 0 ? (
-                                        trendData.map((d, i) => {
-                                            const shouldShow = trendData.length <= 12 ||
-                                                i === 0 ||
-                                                i === trendData.length - 1 ||
-                                                i % Math.ceil(trendData.length / 6) === 0;
-
-                                            return shouldShow ? (
-                                                <span key={i} className={`flex-1 text-center truncate px-1 ${hoveredIdx === i ? 'text-amber-600 scale-110' : ''}`}>{d.month}</span>
-                                            ) : null;
-                                        })
-                                    ) : (
-                                        <div className="w-full text-center text-[var(--text-muted)] py-2">Historical data markers unavailable</div>
-                                    )}
-                                </div>
                             </div>
                         </div>
                     </div>

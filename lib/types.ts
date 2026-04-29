@@ -16,7 +16,13 @@ export interface LeadSource {
     contacted?: number; 
 }
 export interface LeadStatus { status: string; count: number; revenue?: number; }
-export interface MonthlyLead { month: string; leads: number; }
+export interface MonthlyLead { 
+    month: string; 
+    leads: number; 
+    won?: number; 
+    qualified?: number; 
+    contacted?: number; 
+}
 
 export interface LeadMetrics {
     totalLeads: number;
@@ -43,7 +49,7 @@ export interface LeadMetrics {
     bestUserRevenue?: { userName: string; revenue: number } | null;
 }
 
-export interface RegionRevenue { region: string; revenue: number; }
+export interface RegionRevenue { region: string; revenue: number; wonRevenue?: number; }
 export interface MonthlyRevenue { month: string; revenue: number; }
 
 export interface RevenueMetrics {
