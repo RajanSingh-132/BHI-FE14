@@ -4,7 +4,7 @@ const steps = [
     { id: 'upload', label: 'Upload Dataset' },
     { id: 'leads', label: 'Leads Analysis' },
     { id: 'revenue', label: 'Sales Analysis' },
-    { id: 'ads', label: 'Ads Analysis' },
+    { id: 'productivity', label: 'Productivity' },
     { id: 'summary', label: 'Full Analysis' },
 ];
 

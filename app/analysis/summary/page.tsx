@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDataset } from '@/lib/store';
-import { LeadMetrics, RevenueMetrics, AdsMetrics } from '@/lib/types';
+import { LeadMetrics, RevenueMetrics, ProductivityMetrics } from '@/lib/types';
 import { fetchApi } from '@/lib/api';
 import { ArrowLeft, Download, CheckCircle, Lightbulb, ShieldCheck, Zap } from 'lucide-react';
 
@@ -11,7 +11,7 @@ export default function SummaryPage() {
     const { dataset } = useDataset();
     const [leads, setLeads] = useState<LeadMetrics | null>(null);
     const [revenue, setRevenue] = useState<RevenueMetrics | null>(null);
-    const [ads, setAds] = useState<AdsMetrics | null>(null);
+    const [productivity, setProductivity] = useState<ProductivityMetrics | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -19,14 +19,14 @@ export default function SummaryPage() {
 
         const loadAll = async () => {
             try {
-                const [lRes, rRes, aRes] = await Promise.all([
+                const [lRes, rRes, pRes] = await Promise.all([
                     fetchApi<{ metrics: LeadMetrics }>('/api/analytics?type=leads'),
                     fetchApi<{ metrics: RevenueMetrics }>('/api/analytics?type=Sales'),
-                    fetchApi<{ metrics: AdsMetrics }>('/api/analytics?type=ads')
+                    fetchApi<{ metrics: ProductivityMetrics }>('/api/analytics?type=Productivity')
                 ]);
                 setLeads(lRes.metrics);
                 setRevenue(rRes.metrics);
-                setAds(aRes.metrics);
+                setProductivity(pRes.metrics);
             } catch (err) {
                 console.error('Failed to load summary metrics');
             } finally {
@@ -64,7 +64,7 @@ export default function SummaryPage() {
             <div className="flex-1 p-4 md:p-8 space-y-6 md:space-y-8">
                 {/* Insight Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm group hover:shadow-md transition-all">
+                    <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm group hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                         <div className="flex items-center gap-3 mb-8">
                             <div className="p-2 bg-blue-50 text-blue-600 rounded-xl group-hover:scale-110 transition-transform"><CheckCircle size={20} /></div>
                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Leads Pipeline</span>
@@ -80,7 +80,7 @@ export default function SummaryPage() {
                         </div>
                     </div>
 
-                    <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm group hover:shadow-md transition-all">
+                    <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm group hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                         <div className="flex items-center gap-3 mb-8">
                             <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl group-hover:scale-110 transition-transform"><ShieldCheck size={20} /></div>
                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Financial Status</span>
@@ -96,18 +96,18 @@ export default function SummaryPage() {
                         </div>
                     </div>
 
-                    <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm group hover:shadow-md transition-all">
+                    <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm group hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                         <div className="flex items-center gap-3 mb-8">
                             <div className="p-2 bg-purple-50 text-purple-600 rounded-xl group-hover:scale-110 transition-transform"><Zap size={20} /></div>
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ad ROI Stability</span>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Workload Health</span>
                         </div>
                         <div className="space-y-6">
                             <div>
-                                <div className="text-4xl font-black text-purple-600 tracking-tight">{ads?.roas ?? 0}x</div>
-                                <div className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Marketing Return</div>
+                                <div className="text-4xl font-black text-rose-600 tracking-tight">{productivity?.criticalProductivity ?? 0}</div>
+                                <div className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Critical Blockers Detected</div>
                             </div>
-                            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-[13px] text-slate-500 font-medium leading-relaxed italic">
-                                Ad efficiency is optimal at {ads?.roas ?? 0}x. Focus on scaling identified winner campaigns.
+                            <div className="p-4 bg-rose-50 rounded-2xl border border-rose-100 text-[13px] text-rose-600 font-medium leading-relaxed italic">
+                                High priority tasks represent {((productivity?.criticalProductivity || 0) / (productivity?.totalTasks || 1) * 100).toFixed(1)}% of total volume. Immediate resource reallocation suggested.
                             </div>
                         </div>
                     </div>
@@ -151,7 +151,7 @@ export default function SummaryPage() {
             {/* Footer Navigation */}
             <div className="md:px-8 md:py-6 md:border-t md:border-gray-100 flex justify-between items-center p-4">
                 <button
-                    onClick={() => router.push('/analysis/ads')}
+                    onClick={() => router.push('/analysis/productivity')}
                     className="hidden md:flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest"
                 >
                     <ArrowLeft size={16} /> PREVIOUS

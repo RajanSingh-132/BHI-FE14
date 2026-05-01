@@ -226,11 +226,11 @@ export default function RevenuePage() {
                 <div className="hidden md:block text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
                     3 of 5 Diagnostic Steps
                 </div>
-                <button
-                    onClick={() => router.push('/analysis/ads')}
+                <button 
+                    onClick={() => router.push('/analysis/productivity')} 
                     className="hidden md:flex bg-zinc-900 dark:bg-black hover:bg-black text-white px-8 py-3 rounded-xl text-xs font-black items-center gap-3 transition-opacity"
                 >
-                    NEXT: ADS <ArrowRight size={16} />
+                    NEXT: PRODUCTIVITY <ArrowRight size={16} />
                 </button>
             </div>
         </div>

@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation';
 const navItems = [
     { href: '/', label: 'Dashboard', icon: '⬡' },
     { href: '/analysis/leads', label: 'Leads Analysis', icon: '◈' },
-    { href: '/analysis/revenue', label: 'Revenue Analysis', icon: '◇' },
-    { href: '/analysis/ads', label: 'Ads Analysis', icon: '◉' },
+    { href: '/analysis/Sales', label: 'Sales Analysis', icon: '◇' },
+    { href: '/analysis/productivity', label: 'Productivity Analysis', icon: '◉' },
     { href: '/analysis/summary', label: 'Full Analysis', icon: '◎' },
 ];
 

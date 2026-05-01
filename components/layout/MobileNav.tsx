@@ -13,7 +13,7 @@ export default function MobileNav() {
     { label: 'UPLOAD', href: '/', id: 'upload', icon: Upload },
     { label: 'LEADS', href: '/analysis/leads', id: 'leads', icon: BarChart3 },
     { label: 'Sales', href: '/analysis/Sales', id: 'Sales', icon: TrendingUp },
-    { label: 'ADS', href: '/analysis/ads', id: 'ads', icon: Megaphone },
+    { label: 'Productivity', href: '/analysis/productivity', id: 'Productivity', icon: Megaphone },
     { label: 'SUMMARY', href: '/analysis/summary', id: 'summary', icon: FileText }
   ];
 
@@ -26,9 +26,8 @@ export default function MobileNav() {
           const Icon = item.icon;
 
           const content = (
-            <div className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-200 ${
-              isDisabled ? 'opacity-20 cursor-not-allowed grayscale' : isActive ? 'text-[var(--accent)] cursor-pointer' : 'text-[var(--text-muted)] cursor-pointer'
-            }`}>
+            <div className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-200 ${isDisabled ? 'opacity-20 cursor-not-allowed grayscale' : isActive ? 'text-[var(--accent)] cursor-pointer' : 'text-[var(--text-muted)] cursor-pointer'
+              }`}>
               <div className={`p-1.5 rounded-lg transition-colors ${isActive ? 'bg-[var(--accent-soft)]' : 'bg-transparent'}`}>
                 <Icon size={20} className={isActive ? 'stroke-[2.5px]' : 'stroke-2'} />
               </div>
@@ -43,8 +42,8 @@ export default function MobileNav() {
           }
 
           return (
-            <Link 
-              key={item.label} 
+            <Link
+              key={item.label}
               href={item.href}
               className="flex-1 no-underline h-full"
             >

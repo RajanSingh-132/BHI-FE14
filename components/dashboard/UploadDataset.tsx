@@ -10,25 +10,33 @@ import Alert from '@/components/ui/Alert';
 export default function UploadDataset() {
     const router = useRouter();
     const { setDataset } = useDataset();
-    const [dragging, setDragging] = useState(false);
-    const [uploaded, setUploaded] = useState<File | null>(null);
+    const [dragging, setDragging] = useState<string | null>(null);
+    const [files, setFiles] = useState<{
+        lead: File | null;
+        sales: File | null;
+        productivity: File | null;
+    }>({ lead: null, sales: null, productivity: null });
     const [uploading, setUploading] = useState(false);
     const [alert, setAlert] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
-    const fileRef = useRef<HTMLInputElement>(null);
 
-    const processFile = useCallback((file: File) => {
+    const leadRef = useRef<HTMLInputElement>(null);
+    const salesRef = useRef<HTMLInputElement>(null);
+    const prodRef = useRef<HTMLInputElement>(null);
+
+    const processFile = useCallback((file: File, category: 'lead' | 'sales' | 'productivity') => {
         if (!file.name.match(/\.(csv|xlsx|xls|json|pdf)$/i)) {
             setAlert({ type: 'error', msg: 'File format not supported.' });
             return;
         }
-        setUploaded(file);
-        setAlert({ type: 'success', msg: `"${file.name}" ready for analysis.` });
+        setFiles(prev => ({ ...prev, [category]: file }));
+        setAlert({ type: 'success', msg: `"${file.name}" added to ${category} category.` });
     }, []);
 
-    const handleDrop = useCallback((e: React.DragEvent) => {
-        e.preventDefault(); setDragging(false);
+    const handleDrop = useCallback((e: React.DragEvent, category: 'lead' | 'sales' | 'productivity') => {
+        e.preventDefault(); 
+        setDragging(null);
         const file = e.dataTransfer.files[0];
-        if (file) processFile(file);
+        if (file) processFile(file, category);
     }, [processFile]);
 
     const sanitizeHeader = (header: unknown, index: number): string => {
@@ -103,31 +111,73 @@ export default function UploadDataset() {
 
     const handleNext = async () => {
         if (uploading) return;
-        if (!uploaded) {
-            setAlert({ type: 'error', msg: 'Please select a file to continue.' });
+        
+        const activeFiles = Object.entries(files).filter(([_, f]) => f !== null) as [string, File][];
+        if (activeFiles.length === 0) {
+            setAlert({ type: 'error', msg: 'Please select at least one file to continue.' });
             return;
         }
+
         setUploading(true);
         try {
             await fetchApi('/api/reset-session', { method: 'POST' });
-            const isExcel = uploaded.name.match(/\.(xlsx|xls)$/i);
-            const parsedData = isExcel ? await parseExcelFile(uploaded) : await parseCsvFile(uploaded);
-            if (!parsedData.length) { setAlert({ type: 'error', msg: 'No valid data found.' }); return; }
+            
+            const uploadPayload: { file_name: string; data: any[] }[] = [];
+            let mainDataset: Dataset | null = null;
+
+            for (const [cat, file] of activeFiles) {
+                const isExcel = file.name.match(/\.(xlsx|xls)$/i);
+                const parsedData = isExcel ? await parseExcelFile(file) : await parseCsvFile(file);
+                
+                if (parsedData.length > 0) {
+                    uploadPayload.push({ file_name: file.name, data: parsedData });
+                    
+                    // Set the first available file as the primary dataset for legacy support if needed
+                    if (!mainDataset) {
+                        mainDataset = {
+                            name: file.name, size: file.size,
+                            type: file.type || (isExcel ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv'),
+                            uploadedAt: new Date(), data: parsedData,
+                        };
+                    }
+                }
+            }
+
+            if (uploadPayload.length === 0) {
+                setAlert({ type: 'error', msg: 'No valid data found in selected files.' });
+                return;
+            }
+
             await fetchApi<any>('/api/upload-json', {
                 method: 'POST',
-                body: JSON.stringify({ files: [{ file_name: uploaded.name, data: parsedData }] }),
+                body: JSON.stringify({ files: uploadPayload }),
             });
-            const ds: Dataset = {
-                name: uploaded.name, size: uploaded.size,
-                type: uploaded.type || (isExcel ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv'),
-                uploadedAt: new Date(), data: parsedData,
-            };
-            setDataset(ds);
+
+            if (mainDataset) setDataset(mainDataset);
             router.push('/analysis/leads');
         } catch (error: any) {
             setAlert({ type: 'error', msg: `Upload failed: ${error.message || 'Server error'}` });
         } finally { setUploading(false); }
     };
+
+    const UploadBlock = ({ category, label, file, inputRef, icon }: { category: 'lead' | 'sales' | 'productivity', label: string, file: File | null, inputRef: React.RefObject<HTMLInputElement | null>, icon: string }) => (
+        <div 
+            onDrop={e => handleDrop(e, category)} 
+            onDragOver={e => { e.preventDefault(); setDragging(category); }} 
+            onDragLeave={() => setDragging(null)} 
+            className={`flex-1 border-[1.5px] border-dashed rounded-[20px] p-6 text-center transition-all duration-300 cursor-pointer flex flex-col items-center justify-center min-h-[180px] ${dragging === category ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border)] bg-[var(--bg-card)]'} ${file ? 'border-solid border-[var(--accent)]' : ''}`} 
+            onClick={() => inputRef.current?.click()}
+        >
+            <input ref={inputRef} type="file" accept=".csv,.xlsx,.xls,.json,.pdf" hidden onChange={e => e.target.files?.[0] && processFile(e.target.files[0], category)} />
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${file ? 'bg-emerald-500 text-white' : 'bg-[var(--accent-soft)] text-[var(--accent)]'}`}>
+                {file ? <span className="text-xl">✅</span> : <span className="text-xl">{icon}</span>}
+            </div>
+            <h4 className="text-[11px] font-black uppercase tracking-widest mb-1 text-[var(--text-primary)]">{label}</h4>
+            <p className="text-[10px] text-[var(--text-muted)] truncate max-w-full px-2">
+                {file ? file.name : 'Upload Source'}
+            </p>
+        </div>
+    );
 
     return (
         <div className="min-h-full flex flex-col justify-start max-w-[1200px] mx-auto px-5 md:px-10 py-5 md:py-[30px] mobile-scroll pb-24 md:pb-8 text-[var(--text-primary)]">
@@ -147,7 +197,7 @@ export default function UploadDataset() {
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-[1.1fr,1.3fr] gap-6 md:gap-10 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr,1.4fr] gap-6 md:gap-10 items-start">
                 <div>
                     <div className="mb-4 md:mb-8 text-center md:text-left">
                         <div className="text-[10px] font-bold text-[var(--accent)] tracking-[0.1em] mb-3 md:mb-4 uppercase">STEP 01 / DATA INGESTION</div>
@@ -155,7 +205,7 @@ export default function UploadDataset() {
                             Initialize Your Business Diagnostic
                         </h1>
                         <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-4 md:mb-8 mx-auto md:mx-0 max-w-[440px]">
-                            To construct your Health Index, our engine requires structured financial data. Please upload your latest ledger, revenue reports, or advertising performance files.
+                            To construct your Health Index, our engine requires structured financial data. Please upload your files for Lead, Sales, and Productivity analysis.
                         </p>
                     </div>
 
@@ -168,53 +218,18 @@ export default function UploadDataset() {
                         <div>
                             <div className="text-[11px] font-[800] tracking-wider text-[var(--accent)] mb-1 uppercase">ARCHITECTURAL INSIGHT</div>
                             <p className="text-[13px] text-[var(--text-secondary)] italic leading-normal">
-                                "Uploading multi-year data sets allows for deeper trend detection and more accurate health forecasting."
+                                "Categorizing your data into Lead, Sales, and Productivity allows our engine to cross-reference performance across the full funnel."
                             </p>
-                        </div>
-                    </div>
-
-                    <div className="mb-8 hide-on-mobile md:block">
-                        <div className="text-[10px] font-[800] text-[var(--accent)] tracking-[0.1em] mb-4 uppercase">Supported Formats</div>
-                        <div className="flex gap-2.5">
-                            {['.XLSX', '.CSV', '.PDF', '.JSON'].map(ext => (
-                                <div key={ext} className="px-4 py-1.5 bg-[var(--bg-secondary)] rounded-full text-[11px] font-[700] text-[var(--text-secondary)] border border-[var(--border)]">
-                                    {ext}
-                                </div>
-                            ))}
                         </div>
                     </div>
                 </div>
 
                 <div className="flex flex-col gap-5">
-                    <div 
-                        onDrop={handleDrop} 
-                        onDragOver={e => { e.preventDefault(); setDragging(true); }} 
-                        onDragLeave={() => setDragging(false)} 
-                        className={`border-[1.5px] border-dashed rounded-[24px] p-10 text-center transition-all duration-300 cursor-pointer min-h-[300px] md:min-h-[340px] flex flex-col items-center justify-center ${dragging ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border)] bg-[var(--bg-card)]'}`} 
-                        onClick={() => fileRef.current?.click()}
-                    >
-                        <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,.json,.pdf" hidden onChange={e => e.target.files?.[0] && processFile(e.target.files[0])} />
-                        <div className="w-16 h-16 md:w-20 md:h-20 rounded-[24px] bg-[var(--accent-soft)] flex items-center justify-center mb-8 shadow-premium">
-                            {uploaded ? <span className="text-2xl">📄</span> : (
-                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="var(--accent)" fillOpacity="0.1"/>
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                    <path d="M14 2v6h6" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                    <path d="M12 18v-6m0 0-3 3m3-3 3 3" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
-                            )}
-                        </div>
-                        <h3 className="font-inter text-xl md:text-[22px] font-bold text-[var(--text-primary)] mb-2 tracking-tight">
-                            {uploaded ? uploaded.name : 'Drag and drop your financial files'}
-                        </h3>
-                        <p className="text-sm text-[var(--text-secondary)] mb-8">or browse your local directories</p>
-                        <button 
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); fileRef.current?.click(); }}
-                            className="btn-primary px-9 py-3 rounded-xl text-sm active:opacity-80"
-                        >
-                            + Select Files
-                        </button>
+                    {/* 3 Categories Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <UploadBlock category="lead" label="Lead Data" file={files.lead} inputRef={leadRef} icon="🎯" />
+                        <UploadBlock category="sales" label="Sales Data" file={files.sales} inputRef={salesRef} icon="💰" />
+                        <UploadBlock category="productivity" label="Productivity" file={files.productivity} inputRef={prodRef} icon="⚡" />
                     </div>
 
                     <div className="flex md:hidden gap-2 justify-center mb-4">
@@ -226,7 +241,8 @@ export default function UploadDataset() {
                     </div>
 
                     {alert && <div className="fade-up"><Alert type={alert.type} title={alert.type === 'success' ? 'Ready' : 'Note'} message={alert.msg} onClose={() => setAlert(null)} /></div>}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mt-2">
+                    
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mt-4">
                         <div className="flex justify-center gap-6">
                             <div className="flex items-center gap-2 text-[9px] font-[800] text-[var(--text-muted)] tracking-wider uppercase"><span className="text-xs">🛡️</span> ENCRYPTED</div>
                             <div className="flex items-center gap-2 text-[9px] font-[800] text-[var(--text-muted)] tracking-wider uppercase"><span className="text-xs">🛡️</span> SOC2 READY</div>
@@ -234,8 +250,8 @@ export default function UploadDataset() {
                         <button 
                             onClick={handleNext} 
                             disabled={uploading} 
-                            className={`w-full md:w-auto px-10 py-3.5 md:py-2.5 rounded-xl md:rounded-lg text-sm font-bold transition-all uppercase tracking-wider ${uploaded ? 'btn-primary' : 'bg-[var(--bg-secondary)] text-[var(--text-muted)] border-none cursor-not-allowed'}`}
-                            style={{ cursor: uploading ? 'wait' : (uploaded ? 'pointer' : 'not-allowed') }}
+                            className={`w-full md:w-auto px-10 py-3.5 md:py-2.5 rounded-xl md:rounded-lg text-sm font-bold transition-all uppercase tracking-wider ${Object.values(files).some(f => f !== null) ? 'btn-primary' : 'bg-[var(--bg-secondary)] text-[var(--text-muted)] border-none cursor-not-allowed'}`}
+                            style={{ cursor: uploading ? 'wait' : (Object.values(files).some(f => f !== null) ? 'pointer' : 'not-allowed') }}
                         >
                             {uploading ? 'INGESTING...' : 'NEXT →'}
                         </button>

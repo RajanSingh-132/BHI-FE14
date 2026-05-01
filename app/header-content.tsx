@@ -15,7 +15,7 @@ export function HeaderContent() {
     { label: 'Upload', href: '/', id: 'upload' },
     { label: 'Leads', href: '/analysis/leads', id: 'leads' },
     { label: 'Sales', href: '/analysis/Sales', id: 'Sales' },
-    { label: 'Ads', href: '/analysis/ads', id: 'ads' },
+    { label: 'Productivity', href: '/analysis/productivity', id: 'Productivity' },
     { label: 'Summary', href: '/analysis/summary', id: 'summary' }
   ];
 

@@ -3,25 +3,25 @@ export interface Dataset {
 }
 export interface DatasetRow { [key: string]: string | number | null; }
 
-export interface LeadSource { 
-    source: string; 
-    count: number; 
-    percentage: number; 
-    revenue?: number; 
+export interface LeadSource {
+    source: string;
+    count: number;
+    percentage: number;
+    revenue?: number;
     cost?: number;
     profit?: number;
     totalRevenue?: number;
-    won?: number; 
-    qualified?: number; 
-    contacted?: number; 
+    won?: number;
+    qualified?: number;
+    contacted?: number;
 }
 export interface LeadStatus { status: string; count: number; revenue?: number; }
-export interface MonthlyLead { 
-    month: string; 
-    leads: number; 
-    won?: number; 
-    qualified?: number; 
-    contacted?: number; 
+export interface MonthlyLead {
+    month: string;
+    leads: number;
+    won?: number;
+    qualified?: number;
+    contacted?: number;
 }
 
 export interface LeadMetrics {
@@ -89,4 +89,45 @@ export interface AdsMetrics {
     worstCampaign: CampaignData | null;
 }
 
-export type AnalysisStep = 'upload' | 'leads' | 'Sales' | 'ads' | 'summary';
+export interface Performer {
+    name: string;
+    rate: number;
+    tasks: number;
+    resolved?: number;
+}
+
+export interface ProjectSummary {
+    project: string;
+    [key: string]: any;
+}
+
+export interface StatusSummary {
+    status: string;
+    count: number;
+}
+
+export interface ProductivityMetrics {
+    totalTasks: number;
+    highProductivity: number;
+    mediumProductivity: number;
+    lowProductivity: number;
+    criticalProductivity: number;
+    completionRate: number;
+    topPerformers: Performer[];
+    lowPerformers: Performer[];
+    performersDistribution?: Performer[];
+    projectSummary: ProjectSummary[];
+    projectSummaryColumns?: string[];
+    severityDistribution?: { name: string; value: number }[];
+    statusDistribution?: StatusSummary[];
+    columnLabels?: {
+        assignee: string;
+        status: string;
+        priority: string;
+        project: string;
+    };
+    kpiCards?: { label: string; value: number | string; color: string }[];
+    byStatus: StatusSummary[];
+}
+
+export type AnalysisStep = 'upload' | 'leads' | 'Sales' | 'productivity' | 'summary';
