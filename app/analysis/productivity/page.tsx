@@ -225,102 +225,150 @@ export default function ProductivityPage() {
                         )}
                     </div>
                 </div>
-            
-            {/* Project Summary */}
-            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm">
-                <h3 className="text-sm font-black mb-6 uppercase tracking-wider flex items-center gap-2">
-                    <Users size={18} className="text-blue-500" /> Project Summary
-                </h3>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest border-b border-[var(--border)]">
-                                <th className="pb-4">{metrics?.columnLabels?.project || "Project"}</th>
-                                {metrics?.projectSummaryColumns?.map(col => (
-                                    <th key={col} className={`pb-4 text-center ${col === 'Critical' ? 'text-rose-700' : ''}`}>
-                                        {col}
-                                    </th>
-                                ))}
-                                <th className="pb-4 text-center">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[var(--border)]">
-                            {metrics?.projectSummary.map((ps, idx) => (
-                                <tr key={`${ps.project}-${idx}`} className="group hover:bg-[var(--bg-secondary)] transition-colors">
-                                    <td className="py-4 text-sm font-bold">{ps.project}</td>
-                                    {metrics?.projectSummaryColumns?.map(col => {
-                                        let colorClass = "text-[var(--text-primary)]";
-                                        if (col === 'High') colorClass = "text-emerald-600";
-                                        if (col === 'Medium') colorClass = "text-amber-600";
-                                        if (col === 'Low') colorClass = "text-rose-600";
-                                        if (col === 'Critical') colorClass = "text-rose-900";
-                                        const lowerCol = col.toLowerCase();
-                                        if (lowerCol.includes('complete')) colorClass = "text-emerald-600";
-                                        if (lowerCol.includes('progress')) colorClass = "text-blue-600";
-                                        if (lowerCol.includes('pending')) colorClass = "text-amber-600";
-                                        
-                                        return (
-                                            <td key={col} className={`py-4 text-sm font-black text-center ${colorClass}`}>
-                                                {ps[col] || 0}
+
+                {/* Project Summary */}
+                <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm">
+                    <h3 className="text-sm font-black mb-6 uppercase tracking-wider flex items-center gap-2">
+                        <Users size={18} className="text-blue-500" /> Project Summary
+                    </h3>
+                    <div className="overflow-x-auto scrollbar-hide">
+                        <table className="w-full text-left min-w-[700px]">
+                            <thead>
+                                <tr className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest border-b border-[var(--border)] whitespace-nowrap">
+                                    <th className="pb-4">{metrics?.columnLabels?.project || "Project"}</th>
+                                    {metrics?.projectSummaryColumns?.map(col => (
+                                        <th key={col} className={`pb-4 text-center ${col === 'Critical' ? 'text-rose-700' : ''}`}>
+                                            {col}
+                                        </th>
+                                    ))}
+                                    <th className="pb-4 text-center">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[var(--border)]">
+                                {metrics?.projectSummary.map((ps, idx) => {
+                                    const isCompletedRow = ps.row_type === 'completed';
+                                    return (
+                                        <tr key={`${ps.project}-${idx}`} className={`group transition-colors ${isCompletedRow ? 'bg-emerald-50/30' : 'hover:bg-[var(--bg-secondary)]'}`}>
+                                            <td className={`py-4 text-sm whitespace-nowrap ${isCompletedRow ? 'text-emerald-700 font-medium pl-8' : 'font-bold'}`}>
+                                                {ps.project}
                                             </td>
-                                        );
-                                    })}
-                                    <td className="py-4 text-sm font-black text-center text-slate-900">{ps.Total || 0}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                            {metrics?.projectSummaryColumns?.map(col => {
+                                                let colorClass = isCompletedRow ? "text-emerald-600" : "text-[var(--text-primary)]";
 
-            {/* Performers Distribution Table */}
-            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm">
-                <h3 className="text-sm font-black mb-6 uppercase tracking-wider flex items-center gap-2">
-                    <Trophy size={18} className="text-emerald-500" /> Performers Distribution
-                </h3>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest border-b border-[var(--border)]">
-                                <th className="pb-4">{metrics?.columnLabels?.assignee || "Assign"}</th>
-                                <th className="pb-4 text-center">Total bug</th>
-                                <th className="pb-4 text-center">Resolved bugs</th>
-                                <th className="pb-4 text-center">Rate</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[var(--border)]">
-                            {metrics?.performersDistribution?.map(p => (
-                                <tr key={p.name} className="group hover:bg-[var(--bg-secondary)] transition-colors">
-                                    <td className="py-4 text-sm font-bold">{p.name}</td>
-                                    <td className="py-4 text-sm font-black text-center">{p.tasks}</td>
-                                    <td className="py-4 text-sm font-black text-center text-emerald-600">{p.resolved || 0}</td>
-                                    <td className="py-4 text-sm font-black text-center text-blue-600">{p.rate}%</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                                if (!isCompletedRow) {
+                                                    if (col === 'High') colorClass = "text-emerald-600";
+                                                    if (col === 'Medium') colorClass = "text-amber-600";
+                                                    if (col === 'Low') colorClass = "text-rose-600";
+                                                    if (col === 'Critical') colorClass = "text-rose-900";
 
-            {/* Footer Navigation */}
-            <div className="md:px-0 md:py-6 md:border-t md:border-gray-100 flex justify-between items-center p-4">
-                <button
-                    onClick={() => router.push('/analysis/Sales')}
-                    className="hidden md:flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest"
-                >
-                    <ArrowLeft size={16} /> PREVIOUS
-                </button>
-                <div className="hidden md:block text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                    4 of 5 Diagnostic Steps
+                                                    // Status-based coloring fallback
+                                                    const lowerCol = col.toLowerCase();
+                                                    if (lowerCol.includes('complete') || lowerCol.includes('done')) colorClass = "text-emerald-600";
+                                                    if (lowerCol.includes('progress') || lowerCol.includes('active')) colorClass = "text-blue-600";
+                                                    if (lowerCol.includes('pending') || lowerCol.includes('todo')) colorClass = "text-amber-600";
+                                                    if (lowerCol.includes('stuck') || lowerCol.includes('block')) colorClass = "text-rose-700";
+                                                }
+
+                                                return (
+                                                    <td key={col} className={`py-4 text-sm font-black text-center whitespace-nowrap ${colorClass}`}>
+                                                        {ps[col] || 0}
+                                                    </td>
+                                                );
+                                            })}
+                                            <td className={`py-4 text-sm font-black text-center ${isCompletedRow ? 'text-emerald-700' : 'text-slate-900'}`}>
+                                                {ps.Total || 0}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <button
-                    onClick={() => router.push('/analysis/summary')}
-                    className="hidden md:flex bg-zinc-900 hover:bg-black text-white px-8 py-3 rounded-xl text-xs font-black items-center gap-3 transition-opacity"
-                >
-                    NEXT: SUMMARY <ArrowRight size={16} />
-                </button>
+
+                {/* Performers Distribution Table */}
+                <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm">
+                    <h3 className="text-sm font-black mb-6 uppercase tracking-wider flex items-center gap-2">
+                        <Trophy size={18} className="text-emerald-500" /> Performers Distribution
+                    </h3>
+                    <div className="overflow-x-auto scrollbar-hide">
+                        <table className="w-full text-left min-w-[500px]">
+                            <thead>
+                                <tr className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest border-b border-[var(--border)] whitespace-nowrap">
+                                    <th className="pb-4">{metrics?.columnLabels?.assignee || "Assign"}</th>
+                                    <th className="pb-4 text-center">Total bug</th>
+                                    <th className="pb-4 text-center">Resolved bugs</th>
+                                    <th className="pb-4 text-center">Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[var(--border)]">
+                                {metrics?.performersDistribution?.map(p => (
+                                    <tr key={p.name} className="group hover:bg-[var(--bg-secondary)] transition-colors">
+                                        <td className="py-4 text-sm font-bold whitespace-nowrap">{p.name}</td>
+                                        <td className="py-4 text-sm font-black text-center">{p.tasks}</td>
+                                        <td className="py-4 text-sm font-black text-center text-emerald-600">{p.resolved || 0}</td>
+                                        <td className="py-4 text-sm font-black text-center text-blue-600">{p.rate}%</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* Current Milestone Analysis Table */}
+                {metrics?.recentMilestones && metrics.recentMilestones.length > 0 && (
+                    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm">
+                        <h3 className="text-sm font-black mb-6 uppercase tracking-wider flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-2">
+                                <Zap size={18} className="text-amber-500" /> Current Date Milestone Analysis
+                            </div>
+                            <span className="text-[10px] bg-[var(--bg-secondary)] text-[var(--text-muted)] px-3 py-1 rounded-full border border-[var(--border)] font-bold">
+                                {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            </span>
+                        </h3>
+                        <div className="overflow-x-auto scrollbar-hide">
+                            <table className="w-full text-left min-w-[800px]">
+                                <thead>
+                                    <tr className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest border-b border-[var(--border)] whitespace-nowrap">
+                                        <th className="pb-4">{metrics?.columnLabels?.project || "Project"}</th>
+                                        <th className="pb-4 text-center">End Date</th>
+                                        <th className="pb-4 text-center">Current Stage</th>
+
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-[var(--border)]">
+                                    {metrics.recentMilestones.map((rm, idx) => (
+                                        <tr key={idx} className="group hover:bg-[var(--bg-secondary)] transition-colors">
+                                            <td className="py-4 text-sm font-bold whitespace-nowrap">{rm.project}</td>
+                                            <td className="py-4 text-sm text-left font-mono text-[var(--text-muted)] px-4">{rm.date}</td>
+                                            <td className="py-4 text-sm text-center font-black text-blue-600">{rm.milestone}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {/* Footer Navigation */}
+                <div className="md:px-0 md:py-6 md:border-t md:border-gray-100 flex justify-between items-center p-4">
+                    <button
+                        onClick={() => router.push('/analysis/Sales')}
+                        className="hidden md:flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest"
+                    >
+                        <ArrowLeft size={16} /> PREVIOUS
+                    </button>
+                    <div className="hidden md:block text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        4 of 5 Diagnostic Steps
+                    </div>
+                    <button
+                        onClick={() => router.push('/analysis/summary')}
+                        className="hidden md:flex bg-zinc-900 hover:bg-black text-white px-8 py-3 rounded-xl text-xs font-black items-center gap-3 transition-opacity"
+                    >
+                        NEXT: SUMMARY <ArrowRight size={16} />
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
     );
 }

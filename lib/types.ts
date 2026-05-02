@@ -106,6 +106,12 @@ export interface StatusSummary {
     count: number;
 }
 
+export interface RecentMilestone {
+    project: string;
+    date: string;
+    milestone: string
+}
+
 export interface ProductivityMetrics {
     totalTasks: number;
     highProductivity: number;
@@ -125,9 +131,12 @@ export interface ProductivityMetrics {
         status: string;
         priority: string;
         project: string;
+        milestone?: string;
+        date?: string;
     };
     kpiCards?: { label: string; value: number | string; color: string }[];
     byStatus: StatusSummary[];
+    recentMilestones?: RecentMilestone[];
 }
 
 export type AnalysisStep = 'upload' | 'leads' | 'Sales' | 'productivity' | 'summary';
