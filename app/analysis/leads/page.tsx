@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useDataset } from '@/lib/store';
 import { LeadMetrics } from '@/lib/types';
 import { fetchApi } from '@/lib/api';
-import { ArrowLeft, ArrowRight, TrendingUp, Users, Target, BarChart3, Star, Zap, Sparkles, Trophy, AlertCircle, Quote, Receipt, UserCheck, Info, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, TrendingUp, Users, Target, BarChart3, Star, Zap, Sparkles, Trophy, AlertCircle, Quote, Receipt, UserCheck, Info, CheckCircle, Layout } from 'lucide-react';
 import StepIndicator from '@/components/ui/StepIndicator';
 import LeadTrendChart from '@/components/charts/LeadTrendChart';
 
@@ -12,26 +12,44 @@ const COLORS = ['#f59e0b', '#fbbf24', '#d97706', '#92400e', '#78350f'];
 
 export default function LeadsPage() {
     const router = useRouter();
-    const { dataset } = useDataset();
-    const [metrics, setMetrics] = useState<LeadMetrics | null>(null);
+    const { dataset, datasets } = useDataset();
+    const [metricsList, setMetricsList] = useState<{name: string, metrics: LeadMetrics}[]>([]);
     const [loading, setLoading] = useState(true);
-    const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
-    const hasFetched = useRef(false);
+    const hasFetched = useRef<string | null>(null);
 
     useEffect(() => {
-        if (!dataset || hasFetched.current) {
-            if (!dataset) setLoading(false);
-            return;
-        }
+        const fetchAll = async () => {
+            if (!datasets || datasets.length === 0) {
+                if (!dataset) setLoading(false);
+                return;
+            }
 
-        hasFetched.current = true;
-        fetchApi<{ metrics: LeadMetrics }>('/api/analytics?type=leads')
-            .then(res => {
-                setMetrics(res.metrics);
+            const currentNames = datasets.map(d => d.name).join(',');
+            if (hasFetched.current === currentNames) return;
+
+            hasFetched.current = currentNames;
+            setLoading(true);
+
+            try {
+                const results = [];
+                for (const ds of datasets) {
+                    const res = await fetchApi<{ metrics: LeadMetrics }>(`/api/analytics?type=leads&file_name=${encodeURIComponent(ds.name)}`);
+                    results.push({ name: ds.name, metrics: res.metrics });
+                }
+                setMetricsList(results);
+            } catch (error) {
+                console.error("Failed to fetch lead metrics:", error);
+            } finally {
                 setLoading(false);
-            })
-            .catch(() => setLoading(false));
-    }, [dataset]);
+            }
+        };
+
+        fetchAll();
+    }, [datasets, dataset]);
+
+    useEffect(() => {
+        // Removed auto-alternating interval for better UX. User can manually toggle.
+    }, [metricsList]);
 
     if (!dataset) return (
         <div className="h-full flex flex-col items-center justify-center p-6 text-center gap-6">
@@ -51,69 +69,89 @@ export default function LeadsPage() {
         </div>
     );
 
-    // Dynamic Chart Data Calculations
-    const trendData = metrics?.monthlyTrend || [];
-
-    // Lookup byStatus buckets by canonical name (not index)
-    const wonStatus = metrics?.byStatus?.find(s => s.status === 'Won');
-    const qualifiedStatus = metrics?.byStatus?.find(s => s.status === 'Qualified');
-    const contactedStatus = metrics?.byStatus?.find(s => s.status === 'Contacted');
-
-    const count1Label = 'Won';
-    const count1Value = wonStatus?.count ?? metrics?.convertedLeads ?? 0;
-    const rev1Label = 'WON REVENUE';
-    const rev1Value = wonStatus?.revenue ?? metrics?.wonRevenue ?? 0;
-
-    const count2Label = 'Qualified';
-    const count2Value = qualifiedStatus?.count ?? metrics?.qualifiedLeads ?? 0;
-    const rev2Label = 'QUAL. REVENUE';
-    const rev2Value = qualifiedStatus?.revenue ?? metrics?.qualifiedRevenue ?? 0;
-
-    const count3Label = 'Contacted';
-    const count3Value = contactedStatus?.count ?? metrics?.contactedLeads ?? 0;
-    const rev3Label = 'CONT. REVENUE';
-    const rev3Value = contactedStatus?.revenue ?? metrics?.contactedRevenue ?? 0;
-
-
-    const dynamicKPIs = [
-        // Row 1: Counts
-        { label: 'Total Leads', value: metrics?.totalLeads ?? 0, icon: Users, bg: 'bg-amber-50', color: 'text-amber-600' },
-        { label: count1Label, value: count1Value, icon: CheckCircle, bg: 'bg-emerald-50', color: 'text-emerald-600' },
-        { label: count2Label, value: count2Value, icon: Target, bg: 'bg-blue-50', color: 'text-blue-600' },
-        { label: count3Label, value: count3Value, icon: Users, bg: 'bg-indigo-50', color: 'text-indigo-600' },
-        { label: 'Conv. Rate', value: `${metrics?.conversionRate ?? 0}%`, icon: Zap, bg: 'bg-zinc-50', color: 'text-zinc-600' },
-
-        // Row 2: Financials/Performance
-        { label: 'Total Revenue', value: `₹${(metrics?.totalRevenue ?? 0).toLocaleString()}`, icon: TrendingUp, bg: 'bg-zinc-50', color: 'text-zinc-600' },
-        { label: rev1Label, value: `₹${rev1Value.toLocaleString()}`, icon: TrendingUp, bg: 'bg-emerald-50', color: 'text-emerald-600' },
-        { label: rev2Label, value: `₹${rev2Value.toLocaleString()}`, icon: TrendingUp, bg: 'bg-blue-50', color: 'text-blue-600' },
-        { label: rev3Label, value: `₹${rev3Value.toLocaleString()}`, icon: Users, bg: 'bg-indigo-50', color: 'text-indigo-600' },
-
-        { label: 'Cost/Lead', value: `₹${metrics?.costPerLead ?? 0}`, icon: TrendingUp, bg: 'bg-rose-50', color: 'text-rose-600' },
-    ];
-
-    const hasWon = metrics?.topSources?.some(s => (s.won ?? 0) > 0);
-    const hasQualified = metrics?.topSources?.some(s => (s.qualified ?? 0) > 0);
-    const hasContacted = metrics?.topSources?.some(s => (s.contacted ?? 0) > 0);
-    const hasRevenue = metrics?.topSources?.some(s => (s.revenue ?? 0) > 0);
-    const hasCost = metrics?.topSources?.some(s => (s.cost ?? 0) > 0);
-    const hasProfit = metrics?.topSources?.some(s => (s.profit ?? 0) !== 0);
-    const hasTotalRevenue = metrics?.topSources?.some(s => (s.totalRevenue ?? 0) > 0);
-
     return (
         <div className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--text-primary)] overflow-y-auto pb-24 md:pb-10">
             {/* Header Section */}
             <div className="hidden md:flex px-8 pt-6 pb-2 border-b border-[var(--border)] justify-between items-center gap-4">
                 <div>
                     <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest block mb-1">PAGE 02</span>
-                    <h1 className="text-4xl font-black tracking-tight text-[var(--text-primary)]">Analyze Leads</h1>
+                    <h1 className="text-4xl font-black tracking-tight text-[var(--text-primary)] flex items-center gap-4">
+                        Analyze Leads
+                    </h1>
                 </div>
                 <div className="w-auto">
                     <StepIndicator current="leads" />
                 </div>
             </div>
 
-            <div className="flex-1 p-4 md:p-8 space-y-6 md:space-y-8">
+            {metricsList.map((dataItem, idx) => {
+                const metrics = dataItem.metrics;
+                
+                // Dynamic Chart Data Calculations
+                const trendData = metrics?.monthlyTrend || [];
+
+                // Lookup byStatus buckets by canonical name (not index)
+                const wonStatus = metrics?.byStatus?.find(s => s.status === 'Won');
+                const qualifiedStatus = metrics?.byStatus?.find(s => s.status === 'Qualified');
+                const contactedStatus = metrics?.byStatus?.find(s => s.status === 'Contacted');
+
+                const count1Label = 'Won';
+                const count1Value = wonStatus?.count ?? metrics?.convertedLeads ?? 0;
+                const rev1Label = 'WON REVENUE';
+                const rev1Value = wonStatus?.revenue ?? metrics?.wonRevenue ?? 0;
+
+                const count2Label = 'Qualified';
+                const count2Value = qualifiedStatus?.count ?? metrics?.qualifiedLeads ?? 0;
+                const rev2Label = 'QUAL. REVENUE';
+                const rev2Value = qualifiedStatus?.revenue ?? metrics?.qualifiedRevenue ?? 0;
+
+                const count3Label = 'Contacted';
+                const count3Value = contactedStatus?.count ?? metrics?.contactedLeads ?? 0;
+                const rev3Label = 'CONT. REVENUE';
+                const rev3Value = contactedStatus?.revenue ?? metrics?.contactedRevenue ?? 0;
+
+                const dynamicKPIs = [
+                    // Row 1: Counts
+                    { label: 'Total Leads', value: metrics?.totalLeads ?? 0, icon: Users, bg: 'bg-amber-50', color: 'text-amber-600' },
+                    { label: count1Label, value: count1Value, icon: CheckCircle, bg: 'bg-emerald-50', color: 'text-emerald-600' },
+                    { label: count2Label, value: count2Value, icon: Target, bg: 'bg-blue-50', color: 'text-blue-600' },
+                    { label: count3Label, value: count3Value, icon: Users, bg: 'bg-indigo-50', color: 'text-indigo-600' },
+                    { label: 'Conv. Rate', value: `${metrics?.conversionRate ?? 0}%`, icon: Zap, bg: 'bg-zinc-50', color: 'text-zinc-600' },
+
+                    // Row 2: Financials/Performance
+                    { label: 'Total Revenue', value: `₹${(metrics?.totalRevenue ?? 0).toLocaleString()}`, icon: TrendingUp, bg: 'bg-zinc-50', color: 'text-zinc-600' },
+                    { label: rev1Label, value: `₹${rev1Value.toLocaleString()}`, icon: TrendingUp, bg: 'bg-emerald-50', color: 'text-emerald-600' },
+                    { label: rev2Label, value: `₹${rev2Value.toLocaleString()}`, icon: TrendingUp, bg: 'bg-blue-50', color: 'text-blue-600' },
+                    { label: rev3Label, value: `₹${rev3Value.toLocaleString()}`, icon: Users, bg: 'bg-indigo-50', color: 'text-indigo-600' },
+
+                    { label: 'Cost/Lead', value: `₹${metrics?.costPerLead ?? 0}`, icon: TrendingUp, bg: 'bg-rose-50', color: 'text-rose-600' },
+                ];
+
+                const hasWon = metrics?.topSources?.some(s => (s.won ?? 0) > 0);
+                const hasQualified = metrics?.topSources?.some(s => (s.qualified ?? 0) > 0);
+                const hasContacted = metrics?.topSources?.some(s => (s.contacted ?? 0) > 0);
+                const hasRevenue = metrics?.topSources?.some(s => (s.revenue ?? 0) > 0);
+                const hasCost = metrics?.topSources?.some(s => (s.cost ?? 0) > 0);
+                const hasProfit = metrics?.topSources?.some(s => (s.profit ?? 0) !== 0);
+                const hasTotalRevenue = metrics?.topSources?.some(s => (s.totalRevenue ?? 0) > 0);
+
+                return (
+                    <div key={dataItem.name + idx} className="flex-1 p-4 md:p-8 space-y-6 md:space-y-8 pb-12 border-b border-[var(--border)] last:border-b-0">
+                        {metricsList.length > 1 && (
+                            <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6 mb-2 flex items-center justify-between group">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-[var(--bg-card)] rounded-xl border border-[var(--border)] flex items-center justify-center text-[var(--accent)] shadow-sm">
+                                        <Layout size={24} />
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em]">Source File</span>
+                                        <h2 className="text-2xl font-black text-[var(--text-primary)] tracking-tight leading-tight">
+                                            {dataItem.name}
+                                        </h2>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                 {/* Dynamic Top KPI Grid */}
                 {dynamicKPIs.length > 0 && (
@@ -332,17 +370,10 @@ export default function LeadsPage() {
                             </table>
                         </div>
                     </div>
-                )}                   {/* Score Card */}
-                {(metrics?.avgLeadScore ?? 0) > 0 && (
-                    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl md:rounded-3xl p-6 shadow-sm flex flex-col items-center justify-center text-center">
-                        <h4 className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-3">QUALITY SCORE</h4>
-                        <div className="text-4xl font-black text-[var(--text-primary)] mb-1">{metrics?.avgLeadScore}<span className="text-xs text-[var(--text-muted)] ml-1">/10</span></div>
-                        <div className="mt-3 px-3 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-600 rounded-full text-[9px] font-bold uppercase tracking-tighter">
-                            {(metrics?.avgLeadScore ?? 0) > 7.5 ? 'HIGH POTENTIAL' : 'MODERATE QUALITY'}
-                        </div>
-                    </div>
                 )}
             </div>
+            );
+        })}
 
             {/* Footer Navigation */}
             <div className="md:px-8 md:py-6 md:border-t border-[var(--border)] flex justify-between items-center p-4 bg-[var(--bg-card)]">

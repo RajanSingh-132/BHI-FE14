@@ -6,15 +6,18 @@ import { Dataset } from './types';
 interface DatasetContextType {
   dataset: Dataset | null;
   setDataset: (dataset: Dataset | null) => void;
+  datasets: Dataset[];
+  setDatasets: (datasets: Dataset[]) => void;
 }
 
 const DatasetContext = createContext<DatasetContextType | undefined>(undefined);
 
 export function DatasetProvider({ children }: { children: ReactNode }) {
   const [dataset, setDataset] = useState<Dataset | null>(null);
+  const [datasets, setDatasets] = useState<Dataset[]>([]);
 
   return (
-    <DatasetContext.Provider value={{ dataset, setDataset }}>
+    <DatasetContext.Provider value={{ dataset, setDataset, datasets, setDatasets }}>
       {children}
     </DatasetContext.Provider>
   );

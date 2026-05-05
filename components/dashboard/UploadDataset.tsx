@@ -9,30 +9,34 @@ import Alert from '@/components/ui/Alert';
 
 export default function UploadDataset() {
     const router = useRouter();
-    const { setDataset } = useDataset();
+    const { setDataset, setDatasets } = useDataset();
     const [dragging, setDragging] = useState<string | null>(null);
     const [files, setFiles] = useState<{
         lead: File | null;
         sales: File | null;
         productivity: File | null;
-    }>({ lead: null, sales: null, productivity: null });
+        dataset1: File | null;
+        dataset2: File | null;
+    }>({ lead: null, sales: null, productivity: null, dataset1: null, dataset2: null });
     const [uploading, setUploading] = useState(false);
     const [alert, setAlert] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
     const leadRef = useRef<HTMLInputElement>(null);
     const salesRef = useRef<HTMLInputElement>(null);
     const prodRef = useRef<HTMLInputElement>(null);
+    const dataset1Ref = useRef<HTMLInputElement>(null);
+    const dataset2Ref = useRef<HTMLInputElement>(null);
 
-    const processFile = useCallback((file: File, category: 'lead' | 'sales' | 'productivity') => {
+    const processFile = useCallback((file: File, category: string) => {
         if (!file.name.match(/\.(csv|xlsx|xls|json|pdf)$/i)) {
             setAlert({ type: 'error', msg: 'File format not supported.' });
             return;
         }
         setFiles(prev => ({ ...prev, [category]: file }));
-        setAlert({ type: 'success', msg: `"${file.name}" added to ${category} category.` });
+        setAlert({ type: 'success', msg: `"${file.name}" added to dashboard.` });
     }, []);
 
-    const handleDrop = useCallback((e: React.DragEvent, category: 'lead' | 'sales' | 'productivity') => {
+    const handleDrop = useCallback((e: React.DragEvent, category: string) => {
         e.preventDefault(); 
         setDragging(null);
         const file = e.dataTransfer.files[0];
@@ -77,7 +81,6 @@ export default function UploadDataset() {
             return record;
         }).filter(record => Object.values(record).some(v => v !== null && v !== ''));
     };
-
     const parseCsvFile = (file: File): Promise<Record<string, string | number | null>[]> => {
         return new Promise((resolve, reject) => {
             Papa.parse(file, {
@@ -123,7 +126,7 @@ export default function UploadDataset() {
             await fetchApi('/api/reset-session', { method: 'POST' });
             
             const uploadPayload: { file_name: string; data: any[] }[] = [];
-            let mainDataset: Dataset | null = null;
+            const allDatasets: Dataset[] = [];
 
             for (const [cat, file] of activeFiles) {
                 const isExcel = file.name.match(/\.(xlsx|xls)$/i);
@@ -132,14 +135,11 @@ export default function UploadDataset() {
                 if (parsedData.length > 0) {
                     uploadPayload.push({ file_name: file.name, data: parsedData });
                     
-                    // Set the first available file as the primary dataset for legacy support if needed
-                    if (!mainDataset) {
-                        mainDataset = {
-                            name: file.name, size: file.size,
-                            type: file.type || (isExcel ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv'),
-                            uploadedAt: new Date(), data: parsedData,
-                        };
-                    }
+                    allDatasets.push({
+                        name: file.name, size: file.size,
+                        type: file.type || (isExcel ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv'),
+                        uploadedAt: new Date(), data: parsedData,
+                    });
                 }
             }
 
@@ -153,34 +153,37 @@ export default function UploadDataset() {
                 body: JSON.stringify({ files: uploadPayload }),
             });
 
-            if (mainDataset) setDataset(mainDataset);
+            if (allDatasets.length > 0) {
+                setDataset(allDatasets[0]);
+                setDatasets(allDatasets);
+            }
             router.push('/analysis/leads');
         } catch (error: any) {
             setAlert({ type: 'error', msg: `Upload failed: ${error.message || 'Server error'}` });
         } finally { setUploading(false); }
     };
 
-    const UploadBlock = ({ category, label, file, inputRef, icon }: { category: 'lead' | 'sales' | 'productivity', label: string, file: File | null, inputRef: React.RefObject<HTMLInputElement | null>, icon: string }) => (
+    const UploadBlock = ({ category, label, file, inputRef, icon, readOnly = false }: { category: string, label: string, file: File | null, inputRef?: React.RefObject<HTMLInputElement | null>, icon: string, readOnly?: boolean }) => (
         <div 
-            onDrop={e => handleDrop(e, category)} 
-            onDragOver={e => { e.preventDefault(); setDragging(category); }} 
+            onDrop={e => !readOnly && handleDrop(e, category)} 
+            onDragOver={e => { if (!readOnly) { e.preventDefault(); setDragging(category); } }} 
             onDragLeave={() => setDragging(null)} 
-            className={`flex-1 border-[1.5px] border-dashed rounded-[20px] p-6 text-center transition-all duration-300 cursor-pointer flex flex-col items-center justify-center min-h-[180px] ${dragging === category ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border)] bg-[var(--bg-card)]'} ${file ? 'border-solid border-[var(--accent)]' : ''}`} 
-            onClick={() => inputRef.current?.click()}
+            className={`flex-1 border-[1.5px] border-dashed rounded-[20px] p-4 text-center transition-all duration-300 flex flex-col items-center justify-center min-h-[100px] ${!readOnly ? 'cursor-pointer hover:border-[var(--accent)] hover:bg-[var(--bg-secondary)]' : 'cursor-default opacity-80'} ${dragging === category ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border)] bg-[var(--bg-card)]'} ${file ? 'border-solid border-[var(--accent)]' : ''}`} 
+            onClick={() => !readOnly && inputRef?.current?.click()}
         >
-            <input ref={inputRef} type="file" accept=".csv,.xlsx,.xls,.json,.pdf" hidden onChange={e => e.target.files?.[0] && processFile(e.target.files[0], category)} />
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${file ? 'bg-emerald-500 text-white' : 'bg-[var(--accent-soft)] text-[var(--accent)]'}`}>
-                {file ? <span className="text-xl">✅</span> : <span className="text-xl">{icon}</span>}
+            {!readOnly && <input ref={inputRef} type="file" accept=".csv,.xlsx,.xls,.json,.pdf" hidden onChange={e => e.target.files?.[0] && processFile(e.target.files[0], category)} />}
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${file ? 'bg-emerald-500 text-white' : 'bg-[var(--accent-soft)] text-[var(--accent)]'}`}>
+                {file ? <span className="text-lg">✅</span> : <span className="text-lg">{icon}</span>}
             </div>
-            <h4 className="text-[11px] font-black uppercase tracking-widest mb-1 text-[var(--text-primary)]">{label}</h4>
-            <p className="text-[10px] text-[var(--text-muted)] truncate max-w-full px-2">
-                {file ? file.name : 'Upload Source'}
+            <h4 className="text-[10px] font-black uppercase tracking-widest mb-1 text-[var(--text-primary)]">{label}</h4>
+            <p className="text-[9px] text-[var(--text-muted)] truncate max-w-full px-2">
+                {file ? file.name : (readOnly ? 'Upload Source' : 'Click to Upload')}
             </p>
         </div>
     );
 
     return (
-        <div className="min-h-full flex flex-col justify-start max-w-[1200px] mx-auto px-5 md:px-10 py-5 md:py-[30px] mobile-scroll pb-24 md:pb-8 text-[var(--text-primary)]">
+        <div className="h-screen overflow-y-auto scrollbar-hide flex flex-col justify-start max-w-[1200px] mx-auto px-5 md:px-10 py-5 md:py-[30px] mobile-scroll pb-24 md:pb-8 text-[var(--text-primary)]">
             {/* Stepper - Desktop Only */}
             <div className="hidden md:flex items-center justify-center gap-20 mb-8 relative">
                 <div className="absolute top-4 left-[20%] right-[20%] h-[1.5px] bg-[var(--border)] z-0" />
@@ -224,12 +227,20 @@ export default function UploadDataset() {
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-5">
-                    {/* 3 Categories Grid */}
+                <div className="flex flex-col gap-6">
+                    {/* Category Indicators (Read Only) */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <UploadBlock category="lead" label="Lead Data" file={files.lead} inputRef={leadRef} icon="🎯" />
-                        <UploadBlock category="sales" label="Sales Data" file={files.sales} inputRef={salesRef} icon="💰" />
-                        <UploadBlock category="productivity" label="Productivity" file={files.productivity} inputRef={prodRef} icon="⚡" />
+                        <UploadBlock category="lead" label="Lead Data" file={files.lead} icon="🎯" readOnly />
+                        <UploadBlock category="sales" label="Sales Data" file={files.sales} icon="💰" readOnly />
+                        <UploadBlock category="productivity" label="Productivity" file={files.productivity} icon="⚡" readOnly />
+                    </div>
+
+                    <div className="h-[1px] bg-[var(--border)] w-full opacity-50" />
+
+                    {/* Primary Dataset Uploaders */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <UploadBlock category="dataset1" label="Upload Source Dataset 1" file={files.dataset1} inputRef={dataset1Ref} icon="📁" />
+                        <UploadBlock category="dataset2" label="Upload Dataset 2" file={files.dataset2} inputRef={dataset2Ref} icon="📂" />
                     </div>
 
                     <div className="flex md:hidden gap-2 justify-center mb-4">

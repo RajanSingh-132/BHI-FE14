@@ -10,8 +10,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Ba
 
 export default function ProductivityPage() {
     const router = useRouter();
-    const { dataset } = useDataset();
-    const [metrics, setMetrics] = useState<ProductivityMetrics | null>(null);
+    const { dataset, datasets } = useDataset();
+    const [metricsList, setMetricsList] = useState<{name: string, metrics: ProductivityMetrics}[]>([]);
     const [loading, setLoading] = useState(true);
     const [isMounted, setIsMounted] = useState(false);
     const fetchedRef = useRef<any>(null);
@@ -21,20 +21,39 @@ export default function ProductivityPage() {
     }, []);
 
     useEffect(() => {
-        if (!dataset || fetchedRef.current === dataset) {
-            if (!dataset) setLoading(false);
-            return;
-        }
+        const fetchAll = async () => {
+            if (!datasets || datasets.length === 0) {
+                if (!dataset) setLoading(false);
+                return;
+            }
 
-        fetchedRef.current = dataset;
-        setLoading(true);
-        fetchApi<{ metrics: ProductivityMetrics }>('/api/analytics?type=Productivity')
-            .then(res => {
-                setMetrics(res.metrics);
+            // Only fetch if datasets have changed
+            const currentNames = datasets.map(d => d.name).join(',');
+            if (fetchedRef.current === currentNames) return;
+
+            fetchedRef.current = currentNames;
+            setLoading(true);
+
+            try {
+                const results = [];
+                for (const ds of datasets) {
+                    const res = await fetchApi<{ metrics: ProductivityMetrics }>(`/api/analytics?type=Productivity&file_name=${encodeURIComponent(ds.name)}`);
+                    results.push({ name: ds.name, metrics: res.metrics });
+                }
+                setMetricsList(results);
+            } catch (error) {
+                console.error("Failed to fetch productivity metrics:", error);
+            } finally {
                 setLoading(false);
-            })
-            .catch(() => setLoading(false));
-    }, [dataset]);
+            }
+        };
+
+        fetchAll();
+    }, [datasets, dataset]);
+
+    useEffect(() => {
+        // Render sequentially, no interval needed
+    }, [metricsList]);
 
     if (!dataset) return (
         <div className="h-full flex flex-col items-center justify-center p-6 text-center gap-6 bg-[var(--bg)]">
@@ -53,9 +72,6 @@ export default function ProductivityPage() {
         </div>
     );
 
-    const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b'];
-    const pieData = metrics?.statusDistribution?.filter(s => s.count > 0).map(s => ({ name: s.status, value: s.count })) || [];
-
     const getKpiIcon = (label: string) => {
         const lower = label.toLowerCase();
         if (lower.includes('total')) return Layout;
@@ -71,7 +87,7 @@ export default function ProductivityPage() {
             <div className="hidden md:flex px-8 pt-6 pb-2 border-b border-[var(--border)] justify-between items-center gap-4 shrink-0">
                 <div>
                     <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest block mb-1">PAGE 04</span>
-                    <h1 className="text-4xl font-black tracking-tight text-[var(--text-primary)] leading-none">
+                    <h1 className="text-4xl font-black tracking-tight text-[var(--text-primary)] leading-none flex items-center gap-4">
                         Bug Report
                     </h1>
                 </div>
@@ -83,14 +99,35 @@ export default function ProductivityPage() {
             </div>
 
             {/* Content Section */}
-            <div className="p-4 md:p-8 space-y-6 md:space-y-8">
+            {metricsList.map((dataItem, idx) => {
+                const metrics = dataItem.metrics;
+                const pieData = metrics?.statusDistribution?.filter(s => s.count > 0).map(s => ({ name: s.status, value: s.count })) || [];
+                const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b'];
 
-                {/* KPI Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
-                    {metrics?.kpiCards?.map(kpi => {
-                        const Icon = getKpiIcon(kpi.label);
-                        return (
-                            <div key={kpi.label} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-5 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-default">
+                return (
+                    <div key={dataItem.name + idx} className="p-4 md:p-8 space-y-6 md:space-y-8 pb-12 border-b border-[var(--border)] last:border-b-0">
+                        {metricsList.length > 1 && (
+                            <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6 mb-2 flex items-center justify-between group">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-[var(--bg-card)] rounded-xl border border-[var(--border)] flex items-center justify-center text-[var(--accent)] shadow-sm">
+                                        <Layout size={24} />
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em]">Source File</span>
+                                        <h2 className="text-2xl font-black text-[var(--text-primary)] tracking-tight leading-tight">
+                                            {dataItem.name}
+                                        </h2>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* KPI Grid */}
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
+                            {metrics?.kpiCards?.map(kpi => {
+                                const Icon = getKpiIcon(kpi.label);
+                                return (
+                                    <div key={kpi.label} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-5 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-default">
                                 <div className="flex items-center justify-between mb-3 text-[var(--text-muted)]">
                                     <span className="text-[10px] font-bold tracking-wider uppercase">{kpi.label}</span>
                                     <Icon size={16} />
@@ -331,7 +368,7 @@ export default function ProductivityPage() {
                                 <thead>
                                     <tr className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest border-b border-[var(--border)] whitespace-nowrap">
                                         <th className="pb-4">{metrics?.columnLabels?.project || "Project"}</th>
-                                        <th className="pb-4 text-center">End Date</th>
+                                        <th className="pb-4 text-left px-4">End Date</th>
                                         <th className="pb-4 text-center">Current Stage</th>
 
                                     </tr>
@@ -347,27 +384,29 @@ export default function ProductivityPage() {
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                )}
-
-                {/* Footer Navigation */}
-                <div className="md:px-0 md:py-6 md:border-t md:border-gray-100 flex justify-between items-center p-4">
-                    <button
-                        onClick={() => router.push('/analysis/Sales')}
-                        className="hidden md:flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest"
-                    >
-                        <ArrowLeft size={16} /> PREVIOUS
-                    </button>
-                    <div className="hidden md:block text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                        4 of 5 Diagnostic Steps
-                    </div>
-                    <button
-                        onClick={() => router.push('/analysis/summary')}
-                        className="hidden md:flex bg-zinc-900 hover:bg-black text-white px-8 py-3 rounded-xl text-xs font-black items-center gap-3 transition-opacity"
-                    >
-                        NEXT: SUMMARY <ArrowRight size={16} />
-                    </button>
                 </div>
+            )}
+        </div>
+        );
+    })}
+
+            {/* Footer Navigation */}
+            <div className="md:px-0 md:py-6 md:border-t md:border-gray-100 flex justify-between items-center p-4">
+                <button
+                    onClick={() => router.push('/analysis/Sales')}
+                    className="hidden md:flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest"
+                >
+                    <ArrowLeft size={16} /> PREVIOUS
+                </button>
+                <div className="hidden md:block text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    4 of 5 Diagnostic Steps
+                </div>
+                <button
+                    onClick={() => router.push('/analysis/summary')}
+                    className="hidden md:flex bg-zinc-900 hover:bg-black text-white px-8 py-3 rounded-xl text-xs font-black items-center gap-3 transition-opacity"
+                >
+                    NEXT: SUMMARY <ArrowRight size={16} />
+                </button>
             </div>
         </div>
     );

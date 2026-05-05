@@ -6,6 +6,7 @@
 
 :root {
   --bg: #fdfdfd;
+  --bg-primary: #f3ce4c;
   --bg-secondary: #f8fafc;
   --bg-card: #ffffff;
   --bg-card-hover: #fafafa;
@@ -37,7 +38,8 @@ body.dark {
   --bg-card-hover: #374151;
   --border: #374151;
   --border-strong: #4b5563;
-  --accent: #eab308; /* Gold Primary */
+  --accent: #eab308;
+  /* Gold Primary */
   --accent-hover: #ca8a04;
   --accent-bright: #fbbf24;
   --accent-soft: rgba(234, 179, 8, 0.1);
@@ -114,6 +116,7 @@ h4,
   background: var(--accent-hover);
   box-shadow: 0 6px 16px var(--accent-soft);
 }
+
 /* Responsive Utilities */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
@@ -126,7 +129,9 @@ h4,
     height: 100%;
     -webkit-overflow-scrolling: touch;
   }
-  html, body {
+
+  html,
+  body {
     overflow: auto !important;
   }
 }
@@ -134,6 +139,7 @@ h4,
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
