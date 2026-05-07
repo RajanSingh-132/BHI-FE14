@@ -5,18 +5,12 @@ import { MonthlyLead } from '@/lib/types';
 
 export default function LeadTrendChart({ data }: { data: MonthlyLead[] }) {
     const [isMounted, setIsMounted] = useState(false);
-    const [chartHeight, setChartHeight] = useState(300);
 
     useEffect(() => {
         setIsMounted(true);
-        setChartHeight(window.innerWidth > 768 ? 600 : 300);
-        
-        const handleResize = () => {
-            setChartHeight(window.innerWidth > 768 ? 600 : 300);
-        };
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    const dynamicWidth = Math.max(window?.innerWidth || 0, data.length * 80);
 
     // Custom Tooltip component for premium feel
     const CustomTooltip = ({ active, payload, label }: any) => {
@@ -52,54 +46,57 @@ export default function LeadTrendChart({ data }: { data: MonthlyLead[] }) {
     }
 
     return (
-        <div className="w-full relative overflow-x-auto pb-4 scrollbar-hide">
-            <div style={{ minWidth: window.innerWidth < 768 ? '800px' : '100%' }}>
-                <ResponsiveContainer width={window.innerWidth < 768 ? 800 : '100%'} height={chartHeight} minWidth={0}>
+        <div className="w-full relative overflow-x-auto scrollbar-hide">
+            <div style={{ minWidth: `${data.length * 70}px`, width: '100%' }}>
+                <ResponsiveContainer width="100%" height={350}>
                     <BarChart
                         data={data}
                         margin={{ top: 30, right: 10, left: -20, bottom: 0 }}
-                        barGap={2}
+                        barGap={6}
+                        barCategoryGap="20%"
                     >
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#94a3b820" />
                         <XAxis
                             dataKey="month"
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fontSize: 9, fontWeight: 700, fill: '#94a3b8' }}
+                            tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }}
                             dy={10}
                         />
                         <YAxis
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fontSize: 9, fontWeight: 700, fill: '#94a3b8' }}
+                            tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }}
+                            domain={[0, 'dataMax + 50']}
+                            tickCount={6}
                         />
-                        <Tooltip content={<CustomTooltip />} cursor={{ fill: '#94a3b810' }} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
                         <Bar
                             dataKey="won"
                             name="Won"
                             fill="#10b981"
-                            radius={[2, 2, 0, 0]}
-                            barSize={10}
+                            radius={[4, 4, 0, 0]}
+                            maxBarSize={40}
                         >
-                            <LabelList dataKey="won" position="top" style={{ fontSize: 8, fontWeight: 900, fill: '#10b981' }} />
+                            <LabelList dataKey="won" position="top" style={{ fontSize: 9, fontWeight: 800, fill: '#10b981' }} offset={8} />
                         </Bar>
                         <Bar
                             dataKey="qualified"
                             name="Qualified"
                             fill="#3b82f6"
-                            radius={[2, 2, 0, 0]}
-                            barSize={10}
+                            radius={[4, 4, 0, 0]}
+                            maxBarSize={40}
                         >
-                            <LabelList dataKey="qualified" position="top" style={{ fontSize: 8, fontWeight: 900, fill: '#3b82f6' }} />
+                            <LabelList dataKey="qualified" position="top" style={{ fontSize: 9, fontWeight: 800, fill: '#3b82f6' }} offset={8} />
                         </Bar>
                         <Bar
                             dataKey="contacted"
                             name="Contacted"
                             fill="#f59e0b"
-                            radius={[2, 2, 0, 0]}
-                            barSize={10}
+                            radius={[4, 4, 0, 0]}
+                            maxBarSize={40}
                         >
-                            <LabelList dataKey="contacted" position="top" style={{ fontSize: 8, fontWeight: 900, fill: '#f59e0b' }} />
+                            <LabelList dataKey="contacted" position="top" style={{ fontSize: 9, fontWeight: 800, fill: '#f59e0b' }} offset={8} />
                         </Bar>
                     </BarChart>
                 </ResponsiveContainer>

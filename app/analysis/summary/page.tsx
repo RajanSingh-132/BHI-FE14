@@ -8,7 +8,7 @@ import { ArrowLeft, Download, CheckCircle, Lightbulb, ShieldCheck, Zap } from 'l
 
 export default function SummaryPage() {
     const router = useRouter();
-    const { dataset } = useDataset();
+    const { dataset, setDashboardSummary } = useDataset();
     const [leads, setLeads] = useState<LeadMetrics | null>(null);
     const [revenue, setRevenue] = useState<RevenueMetrics | null>(null);
     const [productivity, setProductivity] = useState<ProductivityMetrics | null>(null);
@@ -27,6 +27,12 @@ export default function SummaryPage() {
                 setLeads(lRes.metrics);
                 setRevenue(rRes.metrics);
                 setProductivity(pRes.metrics);
+                // Save consolidated view for AI context
+                setDashboardSummary({
+                    leads: lRes.metrics,
+                    revenue: rRes.metrics,
+                    productivity: pRes.metrics
+                });
             } catch (err) {
                 console.error('Failed to load summary metrics');
             } finally {

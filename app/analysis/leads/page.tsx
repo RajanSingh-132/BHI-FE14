@@ -12,8 +12,8 @@ const COLORS = ['#f59e0b', '#fbbf24', '#d97706', '#92400e', '#78350f'];
 
 export default function LeadsPage() {
     const router = useRouter();
-    const { dataset, datasets } = useDataset();
-    const [metricsList, setMetricsList] = useState<{name: string, metrics: LeadMetrics}[]>([]);
+    const { dataset, datasets, setDashboardSummary } = useDataset();
+    const [metricsList, setMetricsList] = useState<{ name: string, metrics: LeadMetrics }[]>([]);
     const [loading, setLoading] = useState(true);
     const hasFetched = useRef<string | null>(null);
 
@@ -37,6 +37,8 @@ export default function LeadsPage() {
                     results.push({ name: ds.name, metrics: res.metrics });
                 }
                 setMetricsList(results);
+                // Also save to global store for AI context
+                setDashboardSummary(results.length === 1 ? results[0].metrics : results);
             } catch (error) {
                 console.error("Failed to fetch lead metrics:", error);
             } finally {
@@ -86,7 +88,7 @@ export default function LeadsPage() {
 
             {metricsList.map((dataItem, idx) => {
                 const metrics = dataItem.metrics;
-                
+
                 // Dynamic Chart Data Calculations
                 const trendData = metrics?.monthlyTrend || [];
 
@@ -153,227 +155,227 @@ export default function LeadsPage() {
                             </div>
                         )}
 
-                {/* Dynamic Top KPI Grid */}
-                {dynamicKPIs.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
-                        {dynamicKPIs.map((kpi, index) => {
-                            const Icon = kpi.icon;
-                            return (
-                                <div key={`${kpi.label}-${index}`} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-4 md:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <h4 className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest">{kpi.label}</h4>
-                                        <div className={`${kpi.bg} ${kpi.color} p-1.5 rounded-lg shrink-0`}>
-                                            <Icon size={14} />
+                        {/* Dynamic Top KPI Grid */}
+                        {dynamicKPIs.length > 0 && (
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
+                                {dynamicKPIs.map((kpi, index) => {
+                                    const Icon = kpi.icon;
+                                    return (
+                                        <div key={`${kpi.label}-${index}`} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-4 md:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <h4 className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest">{kpi.label}</h4>
+                                                <div className={`${kpi.bg} ${kpi.color} p-1.5 rounded-lg shrink-0`}>
+                                                    <Icon size={14} />
+                                                </div>
+                                            </div>
+                                            <div className={`text-xl md:text-2xl font-black ${kpi.color} tracking-tight`}>
+                                                {typeof kpi.value === 'number' ? kpi.value.toLocaleString() : kpi.value}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* Responsive Content Grid - Trends and Insights */}
+                        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6">
+
+                            {/* TOP ON MOBILE: Performance Insights */}
+                            <div className="order-1 lg:order-2 lg:col-span-1 space-y-6">
+                                <div className="flex items-center justify-between px-1">
+                                    <h3 className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Based on WON lead</h3>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {metrics?.bestLead && metrics.bestLead.source && (
+                                        <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 rounded-2xl p-5 shadow-sm flex items-center gap-5 translate-y-0 hover:-translate-y-1 transition-transform">
+                                            <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-emerald-100">
+                                                <Trophy size={24} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Best Lead Source</h4>
+                                                <div className="text-lg font-black text-emerald-900 dark:text-emerald-100 truncate">{metrics.bestLead.source}</div>
+                                                <div className="text-[10px] font-bold text-emerald-600/70 mt-0.5 uppercase tracking-tight">{metrics.bestLead.won?.toLocaleString() ?? metrics.bestLead.count?.toLocaleString()} LEADS GENERATED</div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {metrics?.bestRevenueLead && metrics.bestRevenueLead.source && (
+                                        <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 rounded-2xl p-5 shadow-sm flex items-center gap-5 translate-y-0 hover:-translate-y-1 transition-transform">
+                                            <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-emerald-100">
+                                                <Trophy size={24} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Best Revenue Source</h4>
+                                                <div className="text-lg font-black text-emerald-900 dark:text-emerald-100 truncate">{metrics.bestRevenueLead.source}</div>
+                                                <div className="text-[10px] font-bold text-emerald-600/70 mt-0.5 uppercase tracking-tight">₹{metrics.bestRevenueLead.revenue?.toLocaleString()} REVENUE GENERATED</div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {metrics?.worstLead && metrics.worstLead.source && (
+                                        <div className="bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/20 rounded-2xl p-5 shadow-sm flex items-center gap-5 translate-y-0 hover:-translate-y-1 transition-transform">
+                                            <div className="w-12 h-12 bg-rose-500 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-rose-100">
+                                                <AlertCircle size={24} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">Worst Lead Source</h4>
+                                                <div className="text-lg font-black text-rose-900 dark:text-rose-100 truncate">{metrics.worstLead.source}</div>
+                                                <div className="text-[10px] font-bold text-rose-600/70 mt-0.5 uppercase tracking-tight">{metrics.worstLead.won?.toLocaleString() ?? metrics.worstLead.count?.toLocaleString()} LEADS GENERATED</div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {metrics?.worstRevenueLead && metrics.worstRevenueLead.source && (
+                                        <div className="bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/20 rounded-2xl p-5 shadow-sm flex items-center gap-5 translate-y-0 hover:-translate-y-1 transition-transform">
+                                            <div className="w-12 h-12 bg-rose-500 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-rose-100">
+                                                <AlertCircle size={24} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">Worst Revenue Source</h4>
+                                                <div className="text-lg font-black text-rose-900 dark:text-rose-100 truncate">{metrics.worstRevenueLead.source}</div>
+                                                <div className="text-[10px] font-bold text-rose-600/70 mt-0.5 uppercase tracking-tight">₹{metrics.worstRevenueLead.revenue?.toLocaleString()} REVENUE GENERATED</div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {metrics?.bestUserLead && metrics.bestUserLead.userName && (
+                                        <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/20 rounded-2xl p-5 shadow-sm flex items-center gap-5 translate-y-0 hover:-translate-y-1 transition-transform">
+                                            <div className="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-100">
+                                                <UserCheck size={24} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Best User (Leads)</h4>
+                                                <div className="text-lg font-black text-blue-900 dark:text-blue-100 truncate">{metrics.bestUserLead.userName}</div>
+                                                <div className="text-[10px] font-bold text-blue-600/70 mt-0.5 uppercase tracking-tight">{metrics.bestUserLead.leads.toLocaleString()} TOTAL LEADS</div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {metrics?.bestUserRevenue && metrics.bestUserRevenue.userName && (
+                                        <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 rounded-2xl p-5 shadow-sm flex items-center gap-5 translate-y-0 hover:-translate-y-1 transition-transform">
+                                            <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-emerald-100">
+                                                <Trophy size={24} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Best User (Revenue)</h4>
+                                                <div className="text-lg font-black text-emerald-900 dark:text-emerald-100 truncate">{metrics.bestUserRevenue.userName}</div>
+                                                <div className="text-[10px] font-bold text-emerald-600/70 mt-0.5 uppercase tracking-tight">₹{metrics.bestUserRevenue.revenue.toLocaleString()} REVENUE GENERATED</div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* SECOND ON MOBILE: Lead Acquisition Trends */}
+                            <div className="order-2 lg:order-1 lg:col-span-2">
+                                <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm relative overflow-hidden group/chart h-full flex flex-col">
+                                    <div className="flex justify-between items-start mb-6 md:mb-8">
+                                        <div>
+                                            <h3 className="text-base md:text-lg font-bold text-[var(--text-primary)] uppercase tracking-tight">Lead Acquisition Trends</h3>
+                                            <div className="mt-1 px-2 py-0.5 bg-[var(--bg-secondary)] text-[var(--text-muted)] rounded text-[9px] font-bold inline-block uppercase">MONTHLY PERFORMANCE</div>
+                                        </div>
+                                        <div className="hidden md:flex items-center gap-4">
+                                            <div className="flex items-center gap-1.5 text-[9px] font-black text-emerald-600 uppercase tracking-tighter">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> WON
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-[9px] font-black text-blue-600 uppercase tracking-tighter">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" /> QUALIFIED
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-[9px] font-black text-amber-600 uppercase tracking-tighter">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500" /> CONTACTED
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className={`text-xl md:text-2xl font-black ${kpi.color} tracking-tight`}>
-                                        {typeof kpi.value === 'number' ? kpi.value.toLocaleString() : kpi.value}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
 
-                {/* Responsive Content Grid - Trends and Insights */}
-                <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6">
-
-                    {/* TOP ON MOBILE: Performance Insights */}
-                    <div className="order-1 lg:order-2 lg:col-span-1 space-y-6">
-                        <div className="flex items-center justify-between px-1">
-                            <h3 className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Based on WON lead</h3>
-                        </div>
-                        <div className="grid grid-cols-1 gap-4">
-                            {metrics?.bestLead && metrics.bestLead.source && (
-                                <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 rounded-2xl p-5 shadow-sm flex items-center gap-5 translate-y-0 hover:-translate-y-1 transition-transform">
-                                    <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-emerald-100">
-                                        <Trophy size={24} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Best Lead Source</h4>
-                                        <div className="text-lg font-black text-emerald-900 dark:text-emerald-100 truncate">{metrics.bestLead.source}</div>
-                                        <div className="text-[10px] font-bold text-emerald-600/70 mt-0.5 uppercase tracking-tight">{metrics.bestLead.won?.toLocaleString() ?? metrics.bestLead.count?.toLocaleString()} LEADS GENERATED</div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {metrics?.bestRevenueLead && metrics.bestRevenueLead.source && (
-                                <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 rounded-2xl p-5 shadow-sm flex items-center gap-5 translate-y-0 hover:-translate-y-1 transition-transform">
-                                    <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-emerald-100">
-                                        <Trophy size={24} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Best Revenue Source</h4>
-                                        <div className="text-lg font-black text-emerald-900 dark:text-emerald-100 truncate">{metrics.bestRevenueLead.source}</div>
-                                        <div className="text-[10px] font-bold text-emerald-600/70 mt-0.5 uppercase tracking-tight">₹{metrics.bestRevenueLead.revenue?.toLocaleString()} REVENUE GENERATED</div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {metrics?.worstLead && metrics.worstLead.source && (
-                                <div className="bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/20 rounded-2xl p-5 shadow-sm flex items-center gap-5 translate-y-0 hover:-translate-y-1 transition-transform">
-                                    <div className="w-12 h-12 bg-rose-500 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-rose-100">
-                                        <AlertCircle size={24} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">Worst Lead Source</h4>
-                                        <div className="text-lg font-black text-rose-900 dark:text-rose-100 truncate">{metrics.worstLead.source}</div>
-                                        <div className="text-[10px] font-bold text-rose-600/70 mt-0.5 uppercase tracking-tight">{metrics.worstLead.won?.toLocaleString() ?? metrics.worstLead.count?.toLocaleString()} LEADS GENERATED</div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {metrics?.worstRevenueLead && metrics.worstRevenueLead.source && (
-                                <div className="bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/20 rounded-2xl p-5 shadow-sm flex items-center gap-5 translate-y-0 hover:-translate-y-1 transition-transform">
-                                    <div className="w-12 h-12 bg-rose-500 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-rose-100">
-                                        <AlertCircle size={24} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">Worst Revenue Source</h4>
-                                        <div className="text-lg font-black text-rose-900 dark:text-rose-100 truncate">{metrics.worstRevenueLead.source}</div>
-                                        <div className="text-[10px] font-bold text-rose-600/70 mt-0.5 uppercase tracking-tight">₹{metrics.worstRevenueLead.revenue?.toLocaleString()} REVENUE GENERATED</div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {metrics?.bestUserLead && metrics.bestUserLead.userName && (
-                                <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/20 rounded-2xl p-5 shadow-sm flex items-center gap-5 translate-y-0 hover:-translate-y-1 transition-transform">
-                                    <div className="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-100">
-                                        <UserCheck size={24} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Best User (Leads)</h4>
-                                        <div className="text-lg font-black text-blue-900 dark:text-blue-100 truncate">{metrics.bestUserLead.userName}</div>
-                                        <div className="text-[10px] font-bold text-blue-600/70 mt-0.5 uppercase tracking-tight">{metrics.bestUserLead.leads.toLocaleString()} TOTAL LEADS</div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {metrics?.bestUserRevenue && metrics.bestUserRevenue.userName && (
-                                <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 rounded-2xl p-5 shadow-sm flex items-center gap-5 translate-y-0 hover:-translate-y-1 transition-transform">
-                                    <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-emerald-100">
-                                        <Trophy size={24} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Best User (Revenue)</h4>
-                                        <div className="text-lg font-black text-emerald-900 dark:text-emerald-100 truncate">{metrics.bestUserRevenue.userName}</div>
-                                        <div className="text-[10px] font-bold text-emerald-600/70 mt-0.5 uppercase tracking-tight">₹{metrics.bestUserRevenue.revenue.toLocaleString()} REVENUE GENERATED</div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* SECOND ON MOBILE: Lead Acquisition Trends */}
-                    <div className="order-2 lg:order-1 lg:col-span-2">
-                        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm relative overflow-hidden group/chart h-full flex flex-col min-h-[400px]">
-                            <div className="flex justify-between items-start mb-6 md:mb-8">
-                                <div>
-                                    <h3 className="text-base md:text-lg font-bold text-[var(--text-primary)] uppercase tracking-tight">Lead Acquisition Trends</h3>
-                                    <div className="mt-1 px-2 py-0.5 bg-[var(--bg-secondary)] text-[var(--text-muted)] rounded text-[9px] font-bold inline-block uppercase">MONTHLY PERFORMANCE</div>
-                                </div>
-                                <div className="hidden md:flex items-center gap-4">
-                                    <div className="flex items-center gap-1.5 text-[9px] font-black text-emerald-600 uppercase tracking-tighter">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> WON
-                                    </div>
-                                    <div className="flex items-center gap-1.5 text-[9px] font-black text-blue-600 uppercase tracking-tighter">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500" /> QUALIFIED
-                                    </div>
-                                    <div className="flex items-center gap-1.5 text-[9px] font-black text-amber-600 uppercase tracking-tighter">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500" /> CONTACTED
+                                    <div className="flex-1 w-full relative">
+                                        {trendData.length > 0 ? (
+                                            <LeadTrendChart data={trendData} />
+                                        ) : (
+                                            <div className="w-full h-full flex flex-col items-center justify-center text-[var(--text-muted)] italic text-xs gap-2">
+                                                <Info size={20} className=" opacity-10" />
+                                                No trend data available for this dataset
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div className="flex-1 w-full relative">
-                                {trendData.length > 0 ? (
-                                    <LeadTrendChart data={trendData} />
-                                ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center text-[var(--text-muted)] italic text-xs gap-2">
-                                        <Info size={20} className=" opacity-10" />
-                                        No trend data available for this dataset
-                                    </div>
-                                )}
+                        {/* Lead Source Distribution - ALWAYS FULL WIDTH */}
+                        {(metrics?.topSources && metrics.topSources.length > 0) && (
+                            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl md:rounded-3xl p-6 shadow-sm mt-6">
+                                <h4 className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-4">
+                                    LEAD SOURCE DISTRIBUTION
+                                </h4>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-separate border-spacing-y-2">
+                                        <thead>
+                                            <tr>
+                                                <th className="px-3 py-2 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Source</th>
+                                                {hasWon && <th className="px-3 py-2 text-[10px] font-black text-emerald-600 uppercase tracking-widest text-center">{metrics?.sourceLabels?.won || 'Won'}</th>}
+                                                {hasQualified && <th className="px-3 py-2 text-[10px] font-black text-blue-600 uppercase tracking-widest text-center">{metrics?.sourceLabels?.qualified || 'Qualified'}</th>}
+                                                {hasContacted && <th className="px-3 py-2 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">Contacted</th>}
+                                                <th className="px-3 py-2 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest text-center">Total Leads</th>
+                                                {hasRevenue && <th className="px-3 py-2 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest text-right">Revenue</th>}
+                                                {hasCost && <th className="px-3 py-2 text-[10px] font-black text-rose-600 uppercase tracking-widest text-right">Cost</th>}
+                                                {hasProfit && <th className="px-3 py-2 text-[10px] font-black text-amber-600 uppercase tracking-widest text-right">Profit</th>}
+                                                {hasTotalRevenue && <th className="px-3 py-2 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest text-right">Total Revenue</th>}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {metrics.topSources.map((source, i) => (
+                                                <tr key={source.source} className="group">
+                                                    <td className="px-3 py-3 bg-[var(--bg-secondary)] border-l border-y border-[var(--border)] rounded-l-xl text-[11px] font-bold text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors uppercase truncate">
+                                                        {source.source}
+                                                    </td>
+                                                    {hasWon && (
+                                                        <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-emerald-600 text-center tabular-nums">
+                                                            {source.won?.toLocaleString() ?? 0}
+                                                        </td>
+                                                    )}
+                                                    {hasQualified && (
+                                                        <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-blue-600 text-center tabular-nums">
+                                                            {source.qualified?.toLocaleString() ?? 0}
+                                                        </td>
+                                                    )}
+                                                    {hasContacted && (
+                                                        <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-zinc-500 text-center tabular-nums">
+                                                            {source.contacted?.toLocaleString() ?? 0}
+                                                        </td>
+                                                    )}
+                                                    <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-[var(--text-primary)] text-center tabular-nums">
+                                                        {source.count.toLocaleString()}
+                                                    </td>
+                                                    {hasRevenue && (
+                                                        <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-[var(--text-muted)] text-right tabular-nums">
+                                                            ₹{source.revenue?.toLocaleString() ?? 0}
+                                                        </td>
+                                                    )}
+                                                    {hasCost && (
+                                                        <td className={`px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-rose-600 text-right tabular-nums ${(!hasProfit && !hasTotalRevenue) ? 'border-r rounded-r-xl' : ''}`}>
+                                                            ₹{source.cost?.toLocaleString() ?? 0}
+                                                        </td>
+                                                    )}
+                                                    {hasProfit && (
+                                                        <td className={`px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-amber-600 dark:text-amber-400 text-right tabular-nums ${!hasTotalRevenue ? 'border-r rounded-r-xl' : ''}`}>
+                                                            ₹{source.profit?.toLocaleString() ?? 0}
+                                                        </td>
+                                                    )}
+                                                    {hasTotalRevenue && (
+                                                        <td className="px-3 py-3 bg-[var(--bg-secondary)] border-r border-y border-[var(--border)] rounded-r-xl text-[12px] font-black text-[var(--text-muted)] text-right tabular-nums">
+                                                            ₹{source.totalRevenue?.toLocaleString() ?? 0}
+                                                        </td>
+                                                    )}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
-                </div>
-
-                {/* Lead Source Distribution - ALWAYS FULL WIDTH */}
-                {(metrics?.topSources && metrics.topSources.length > 0) && (
-                    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl md:rounded-3xl p-6 shadow-sm mt-6">
-                        <h4 className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-4">
-                            LEAD SOURCE DISTRIBUTION
-                        </h4>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-separate border-spacing-y-2">
-                                <thead>
-                                    <tr>
-                                        <th className="px-3 py-2 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Source</th>
-                                        {hasWon && <th className="px-3 py-2 text-[10px] font-black text-emerald-600 uppercase tracking-widest text-center">{metrics?.sourceLabels?.won || 'Won'}</th>}
-                                        {hasQualified && <th className="px-3 py-2 text-[10px] font-black text-blue-600 uppercase tracking-widest text-center">{metrics?.sourceLabels?.qualified || 'Qualified'}</th>}
-                                        {hasContacted && <th className="px-3 py-2 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">Contacted</th>}
-                                        <th className="px-3 py-2 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest text-center">Total Leads</th>
-                                        {hasRevenue && <th className="px-3 py-2 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest text-right">Revenue</th>}
-                                        {hasCost && <th className="px-3 py-2 text-[10px] font-black text-rose-600 uppercase tracking-widest text-right">Cost</th>}
-                                        {hasProfit && <th className="px-3 py-2 text-[10px] font-black text-amber-600 uppercase tracking-widest text-right">Profit</th>}
-                                        {hasTotalRevenue && <th className="px-3 py-2 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest text-right">Total Revenue</th>}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {metrics.topSources.map((source, i) => (
-                                        <tr key={source.source} className="group">
-                                            <td className="px-3 py-3 bg-[var(--bg-secondary)] border-l border-y border-[var(--border)] rounded-l-xl text-[11px] font-bold text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors uppercase truncate">
-                                                {source.source}
-                                            </td>
-                                            {hasWon && (
-                                                <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-emerald-600 text-center tabular-nums">
-                                                    {source.won?.toLocaleString() ?? 0}
-                                                </td>
-                                            )}
-                                            {hasQualified && (
-                                                <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-blue-600 text-center tabular-nums">
-                                                    {source.qualified?.toLocaleString() ?? 0}
-                                                </td>
-                                            )}
-                                            {hasContacted && (
-                                                <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-zinc-500 text-center tabular-nums">
-                                                    {source.contacted?.toLocaleString() ?? 0}
-                                                </td>
-                                            )}
-                                            <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-[var(--text-primary)] text-center tabular-nums">
-                                                {source.count.toLocaleString()}
-                                            </td>
-                                            {hasRevenue && (
-                                                <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-[var(--text-muted)] text-right tabular-nums">
-                                                    ₹{source.revenue?.toLocaleString() ?? 0}
-                                                </td>
-                                            )}
-                                            {hasCost && (
-                                                <td className={`px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-rose-600 text-right tabular-nums ${(!hasProfit && !hasTotalRevenue) ? 'border-r rounded-r-xl' : ''}`}>
-                                                    ₹{source.cost?.toLocaleString() ?? 0}
-                                                </td>
-                                            )}
-                                            {hasProfit && (
-                                                <td className={`px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-amber-600 dark:text-amber-400 text-right tabular-nums ${!hasTotalRevenue ? 'border-r rounded-r-xl' : ''}`}>
-                                                    ₹{source.profit?.toLocaleString() ?? 0}
-                                                </td>
-                                            )}
-                                            {hasTotalRevenue && (
-                                                <td className="px-3 py-3 bg-[var(--bg-secondary)] border-r border-y border-[var(--border)] rounded-r-xl text-[12px] font-black text-[var(--text-muted)] text-right tabular-nums">
-                                                    ₹{source.totalRevenue?.toLocaleString() ?? 0}
-                                                </td>
-                                            )}
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                )}
-            </div>
-            );
-        })}
+                );
+            })}
 
             {/* Footer Navigation */}
             <div className="md:px-8 md:py-6 md:border-t border-[var(--border)] flex justify-between items-center p-4 bg-[var(--bg-card)]">

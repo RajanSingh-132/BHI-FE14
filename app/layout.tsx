@@ -5,6 +5,7 @@ import { DatasetProvider } from '@/lib/store';
 import { ThemeProvider } from '@/lib/theme';
 import { HeaderContent } from './header-content';
 import MobileNav from '@/components/layout/MobileNav';
+import AIWidget from '@/components/layout/AIWidget';
 
 const syne = Syne({
   subsets: ['latin'],
@@ -33,11 +34,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <DatasetProvider>
             <div className="flex flex-col h-screen w-screen overflow-hidden">
               <HeaderContent />
-              <main className="flex-1 flex flex-col overflow-y-auto md:overflow-hidden bg-[var(--bg)] pb-20 md:pb-0">
+              <main className="flex-1 flex flex-col overflow-y-auto bg-[var(--bg)] pb-20 md:pb-0">
                 {children}
               </main>
               <MobileNav />
             </div>
+            <AIWidget />
           </DatasetProvider>
         </ThemeProvider>
       </body>

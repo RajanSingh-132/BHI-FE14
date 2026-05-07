@@ -17,7 +17,9 @@ export default function UploadDataset() {
         productivity: File | null;
         dataset1: File | null;
         dataset2: File | null;
-    }>({ lead: null, sales: null, productivity: null, dataset1: null, dataset2: null });
+        dataset3: File | null;
+        dataset4: File | null;
+    }>({ lead: null, sales: null, productivity: null, dataset1: null, dataset2: null, dataset3: null, dataset4: null });
     const [uploading, setUploading] = useState(false);
     const [alert, setAlert] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
@@ -26,6 +28,8 @@ export default function UploadDataset() {
     const prodRef = useRef<HTMLInputElement>(null);
     const dataset1Ref = useRef<HTMLInputElement>(null);
     const dataset2Ref = useRef<HTMLInputElement>(null);
+    const dataset3Ref = useRef<HTMLInputElement>(null);
+    const dataset4Ref = useRef<HTMLInputElement>(null);
 
     const processFile = useCallback((file: File, category: string) => {
         if (!file.name.match(/\.(csv|xlsx|xls|json|pdf)$/i)) {
@@ -37,7 +41,7 @@ export default function UploadDataset() {
     }, []);
 
     const handleDrop = useCallback((e: React.DragEvent, category: string) => {
-        e.preventDefault(); 
+        e.preventDefault();
         setDragging(null);
         const file = e.dataTransfer.files[0];
         if (file) processFile(file, category);
@@ -114,7 +118,7 @@ export default function UploadDataset() {
 
     const handleNext = async () => {
         if (uploading) return;
-        
+
         const activeFiles = Object.entries(files).filter(([_, f]) => f !== null) as [string, File][];
         if (activeFiles.length === 0) {
             setAlert({ type: 'error', msg: 'Please select at least one file to continue.' });
@@ -124,17 +128,17 @@ export default function UploadDataset() {
         setUploading(true);
         try {
             await fetchApi('/api/reset-session', { method: 'POST' });
-            
+
             const uploadPayload: { file_name: string; data: any[] }[] = [];
             const allDatasets: Dataset[] = [];
 
             for (const [cat, file] of activeFiles) {
                 const isExcel = file.name.match(/\.(xlsx|xls)$/i);
                 const parsedData = isExcel ? await parseExcelFile(file) : await parseCsvFile(file);
-                
+
                 if (parsedData.length > 0) {
                     uploadPayload.push({ file_name: file.name, data: parsedData });
-                    
+
                     allDatasets.push({
                         name: file.name, size: file.size,
                         type: file.type || (isExcel ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv'),
@@ -164,11 +168,11 @@ export default function UploadDataset() {
     };
 
     const UploadBlock = ({ category, label, file, inputRef, icon, readOnly = false }: { category: string, label: string, file: File | null, inputRef?: React.RefObject<HTMLInputElement | null>, icon: string, readOnly?: boolean }) => (
-        <div 
-            onDrop={e => !readOnly && handleDrop(e, category)} 
-            onDragOver={e => { if (!readOnly) { e.preventDefault(); setDragging(category); } }} 
-            onDragLeave={() => setDragging(null)} 
-            className={`flex-1 border-[1.5px] border-dashed rounded-[20px] p-4 text-center transition-all duration-300 flex flex-col items-center justify-center min-h-[100px] ${!readOnly ? 'cursor-pointer hover:border-[var(--accent)] hover:bg-[var(--bg-secondary)]' : 'cursor-default opacity-80'} ${dragging === category ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border)] bg-[var(--bg-card)]'} ${file ? 'border-solid border-[var(--accent)]' : ''}`} 
+        <div
+            onDrop={e => !readOnly && handleDrop(e, category)}
+            onDragOver={e => { if (!readOnly) { e.preventDefault(); setDragging(category); } }}
+            onDragLeave={() => setDragging(null)}
+            className={`flex-1 border-[1.5px] border-dashed rounded-[20px] p-4 text-center transition-all duration-300 flex flex-col items-center justify-center min-h-[100px] ${!readOnly ? 'cursor-pointer hover:border-[var(--accent)] hover:bg-[var(--bg-secondary)]' : 'cursor-default opacity-80'} ${dragging === category ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border)] bg-[var(--bg-card)]'} ${file ? 'border-solid border-[var(--accent)]' : ''}`}
             onClick={() => !readOnly && inputRef?.current?.click()}
         >
             {!readOnly && <input ref={inputRef} type="file" accept=".csv,.xlsx,.xls,.json,.pdf" hidden onChange={e => e.target.files?.[0] && processFile(e.target.files[0], category)} />}
@@ -183,7 +187,7 @@ export default function UploadDataset() {
     );
 
     return (
-        <div className="h-screen overflow-y-auto scrollbar-hide flex flex-col justify-start max-w-[1200px] mx-auto px-5 md:px-10 py-5 md:py-[30px] mobile-scroll pb-24 md:pb-8 text-[var(--text-primary)]">
+        <div className="w-full flex flex-col justify-start max-w-[1200px] mx-auto px-5 md:px-10 py-5 md:py-[30px] mobile-scroll pb-24 md:pb-8 text-[var(--text-primary)]">
             {/* Stepper - Desktop Only */}
             <div className="hidden md:flex items-center justify-center gap-20 mb-8 relative">
                 <div className="absolute top-4 left-[20%] right-[20%] h-[1.5px] bg-[var(--border)] z-0" />
@@ -240,7 +244,9 @@ export default function UploadDataset() {
                     {/* Primary Dataset Uploaders */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <UploadBlock category="dataset1" label="Upload Source Dataset 1" file={files.dataset1} inputRef={dataset1Ref} icon="📁" />
-                        <UploadBlock category="dataset2" label="Upload Dataset 2" file={files.dataset2} inputRef={dataset2Ref} icon="📂" />
+                        <UploadBlock category="dataset2" label="Upload Dataset 2" file={files.dataset2} inputRef={dataset2Ref} icon="📁" />
+                        <UploadBlock category="dataset3" label="Upload Dataset 3" file={files.dataset3} inputRef={dataset3Ref} icon="📁" />
+                        <UploadBlock category="dataset4" label="Upload Dataset 4" file={files.dataset4} inputRef={dataset4Ref} icon="📁" />
                     </div>
 
                     <div className="flex md:hidden gap-2 justify-center mb-4">
@@ -252,15 +258,15 @@ export default function UploadDataset() {
                     </div>
 
                     {alert && <div className="fade-up"><Alert type={alert.type} title={alert.type === 'success' ? 'Ready' : 'Note'} message={alert.msg} onClose={() => setAlert(null)} /></div>}
-                    
+
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mt-4">
                         <div className="flex justify-center gap-6">
                             <div className="flex items-center gap-2 text-[9px] font-[800] text-[var(--text-muted)] tracking-wider uppercase"><span className="text-xs">🛡️</span> ENCRYPTED</div>
                             <div className="flex items-center gap-2 text-[9px] font-[800] text-[var(--text-muted)] tracking-wider uppercase"><span className="text-xs">🛡️</span> SOC2 READY</div>
                         </div>
-                        <button 
-                            onClick={handleNext} 
-                            disabled={uploading} 
+                        <button
+                            onClick={handleNext}
+                            disabled={uploading}
                             className={`w-full md:w-auto px-10 py-3.5 md:py-2.5 rounded-xl md:rounded-lg text-sm font-bold transition-all uppercase tracking-wider ${Object.values(files).some(f => f !== null) ? 'btn-primary' : 'bg-[var(--bg-secondary)] text-[var(--text-muted)] border-none cursor-not-allowed'}`}
                             style={{ cursor: uploading ? 'wait' : (Object.values(files).some(f => f !== null) ? 'pointer' : 'not-allowed') }}
                         >

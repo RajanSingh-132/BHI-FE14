@@ -10,7 +10,7 @@ import RevenueTrendChart from '@/components/charts/RevenueTrendChart';
 
 export default function RevenuePage() {
     const router = useRouter();
-    const { dataset, datasets } = useDataset();
+    const { dataset, datasets, setDashboardSummary } = useDataset();
     const [metricsList, setMetricsList] = useState<{ name: string, metrics: any }[]>([]);
     const [loading, setLoading] = useState(true);
     const hasFetched = useRef<string | null>(null);
@@ -35,6 +35,8 @@ export default function RevenuePage() {
                     results.push({ name: ds.name, metrics: res.metrics });
                 }
                 setMetricsList(results);
+                // Also save to global store for AI context
+                setDashboardSummary(results.length === 1 ? results[0].metrics : results);
             } catch (error) {
                 console.error("Failed to fetch sales metrics:", error);
             } finally {

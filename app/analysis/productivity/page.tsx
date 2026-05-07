@@ -10,7 +10,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Ba
 
 export default function ProductivityPage() {
     const router = useRouter();
-    const { dataset, datasets } = useDataset();
+    const { dataset, datasets, setDashboardSummary } = useDataset();
     const [metricsList, setMetricsList] = useState<{name: string, metrics: ProductivityMetrics}[]>([]);
     const [loading, setLoading] = useState(true);
     const [isMounted, setIsMounted] = useState(false);
@@ -41,6 +41,8 @@ export default function ProductivityPage() {
                     results.push({ name: ds.name, metrics: res.metrics });
                 }
                 setMetricsList(results);
+                // Also save to global store for AI context
+                setDashboardSummary(results.length === 1 ? results[0].metrics : results);
             } catch (error) {
                 console.error("Failed to fetch productivity metrics:", error);
             } finally {
@@ -107,7 +109,7 @@ export default function ProductivityPage() {
                 return (
                     <div key={dataItem.name + idx} className="p-4 md:p-8 space-y-6 md:space-y-8 pb-12 border-b border-[var(--border)] last:border-b-0">
                         {metricsList.length > 1 && (
-                            <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6 mb-2 flex items-center justify-between group">
+                            <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl p-6 mb-2 flex items-center justify-between group">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 bg-[var(--bg-card)] rounded-xl border border-[var(--border)] flex items-center justify-center text-[var(--accent)] shadow-sm">
                                         <Layout size={24} />
