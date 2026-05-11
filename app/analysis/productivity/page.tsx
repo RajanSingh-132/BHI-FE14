@@ -108,21 +108,19 @@ export default function ProductivityPage() {
 
                 return (
                     <div key={dataItem.name + idx} className="p-4 md:p-8 space-y-6 md:space-y-8 pb-12 border-b border-[var(--border)] last:border-b-0">
-                        {metricsList.length > 1 && (
-                            <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl p-6 mb-2 flex items-center justify-between group">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-[var(--bg-card)] rounded-xl border border-[var(--border)] flex items-center justify-center text-[var(--accent)] shadow-sm">
-                                        <Layout size={24} />
-                                    </div>
-                                    <div>
-                                        <span className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em]">Source File</span>
-                                        <h2 className="text-2xl font-black text-[var(--text-primary)] tracking-tight leading-tight">
-                                            {dataItem.name}
-                                        </h2>
-                                    </div>
+                        <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl p-6 mb-2 flex items-center justify-between group">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-[var(--bg-card)] rounded-xl border border-[var(--border)] flex items-center justify-center text-[var(--accent)] shadow-sm">
+                                    <Layout size={24} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <span className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em]">Source File</span>
+                                    <h2 className="text-lg md:text-2xl font-black text-[var(--text-primary)] tracking-tight leading-tight break-all">
+                                        {dataItem.name}
+                                    </h2>
                                 </div>
                             </div>
-                        )}
+                        </div>
 
                         {/* KPI Grid */}
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
