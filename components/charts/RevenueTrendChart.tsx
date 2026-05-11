@@ -11,13 +11,13 @@ interface RevenueData {
 export default function RevenueTrendChart({ data }: { data: RevenueData[] }) {
     const [isMounted, setIsMounted] = useState(false);
     const [chartHeight, setChartHeight] = useState(300);
- 
+
     useEffect(() => {
         setIsMounted(true);
-        setChartHeight(window.innerWidth > 768 ? 600 : 300);
-        
+        setChartHeight(window.innerWidth > 768 ? 420 : 300);
+
         const handleResize = () => {
-            setChartHeight(window.innerWidth > 768 ? 600 : 300);
+            setChartHeight(window.innerWidth > 768 ? 420 : 300);
         };
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
@@ -60,7 +60,8 @@ export default function RevenueTrendChart({ data }: { data: RevenueData[] }) {
                 <ResponsiveContainer width={window.innerWidth < 768 ? 800 : '100%'} height={chartHeight} minWidth={0}>
                     <BarChart
                         data={data}
-                        margin={{ top: 30, right: 10, left: -20, bottom: 0 }}
+                        margin={{ top: 20, right: 10, left: 0, bottom: 20 }}
+                        barGap={4}
                     >
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#94a3b820" />
                         <XAxis
@@ -68,12 +69,19 @@ export default function RevenueTrendChart({ data }: { data: RevenueData[] }) {
                             axisLine={false}
                             tickLine={false}
                             tick={{ fontSize: 9, fontWeight: 700, fill: '#94a3b8' }}
-                            dy={10}
+                            dy={8}
                         />
                         <YAxis
+                            width={35}
                             axisLine={false}
                             tickLine={false}
                             tick={{ fontSize: 9, fontWeight: 700, fill: '#94a3b8' }}
+                            tickFormatter={(value) => {
+                                if (value >= 10000000) return `${(value / 10000000).toFixed(1)}Cr`;
+                                if (value >= 100000) return `${(value / 100000).toFixed(0)}L`;
+                                return value;
+                            }}
+                            domain={[0, 'auto']}
                         />
                         <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f59e0b10' }} />
                         <Bar
@@ -81,7 +89,7 @@ export default function RevenueTrendChart({ data }: { data: RevenueData[] }) {
                             name="Won Revenue"
                             fill="#10b981"
                             radius={[4, 4, 0, 0]}
-                            barSize={24}
+                            barSize={32}
                         >
                             <LabelList
                                 dataKey="wonRevenue"
@@ -95,7 +103,7 @@ export default function RevenueTrendChart({ data }: { data: RevenueData[] }) {
                             name="Total Revenue"
                             fill="#f59e0b"
                             radius={[4, 4, 0, 0]}
-                            barSize={24}
+                            barSize={32}
                         >
                             <LabelList
                                 dataKey="revenue"

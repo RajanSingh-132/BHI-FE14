@@ -76,12 +76,14 @@ export default function AIWidget() {
         type: 'text'
       }));
 
-      // Dynamically select endpoint based on pathname
-      let endpoint = '/api/chat';
-      if (pathname.includes('leads')) endpoint = '/api/leads-chat';
-      else if (pathname.includes('Sales')) endpoint = '/api/sales-chat';
-      else if (pathname.includes('productivity')) endpoint = '/api/productivity-chat';
-      else if (pathname.includes('summary')) endpoint = '/api/summary-chat';
+      // Dynamically select endpoint based on pathname (case-insensitive)
+      const path = pathname.toLowerCase();
+      let endpoint = '/api/summary-chat'; // Default to summary instead of non-existent /api/chat
+      
+      if (path.includes('leads')) endpoint = '/api/leads-chat';
+      else if (path.includes('sales')) endpoint = '/api/sales-chat';
+      else if (path.includes('productivity')) endpoint = '/api/productivity-chat';
+      else if (path.includes('summary')) endpoint = '/api/summary-chat';
 
       const response = await fetchApi<{ answer: string; type?: string }>(endpoint, {
         method: 'POST',

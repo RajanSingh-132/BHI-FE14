@@ -133,7 +133,7 @@ export default function RevenuePage() {
 
                         {/* Analysis Row */}
                         <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6">
-                            <div className="lg:col-span-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm flex flex-col min-h-[400px]">
+                            <div className="lg:col-span-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-4 md:p-5 shadow-sm flex flex-col w-full">
                                 <div className="flex justify-between items-start mb-8">
                                     <div>
                                         <h3 className="text-sm font-black text-[var(--text-primary)] tracking-wide uppercase flex items-center gap-2">
@@ -161,7 +161,7 @@ export default function RevenuePage() {
                                 </div>
                             </div>
 
-                            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-6 md:p-8 flex flex-col shadow-sm">
+                            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-4 md:p-5 flex flex-col shadow-sm w-full">
                                 <h3 className="text-sm font-black mb-6 text-[var(--text-primary)] tracking-wide uppercase flex items-center gap-2 flex-shrink-0">
                                     <div className="w-1.5 h-6 bg-blue-600 rounded-full" /> Allocation by Region
                                 </h3>
@@ -177,13 +177,13 @@ export default function RevenuePage() {
                                         <tbody>
                                             {metrics?.byRegion && metrics.byRegion.length > 0 ? metrics.byRegion.slice(0, 10).map((r: any, i: number) => (
                                                 <tr key={r.region} className="group">
-                                                    <td className="px-3 py-3 bg-[var(--bg-secondary)] border-l border-y border-[var(--border)] rounded-l-xl text-[11px] font-bold text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors uppercase truncate">
+                                                    <td className="px-3 py-2.5 bg-[var(--bg-secondary)] border-l border-y border-[var(--border)] rounded-l-xl text-[11px] font-bold text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors uppercase truncate">
                                                         {r.region}
                                                     </td>
-                                                    <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-emerald-600 text-right tabular-nums">
+                                                    <td className="px-3 py-2.5 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-emerald-600 text-right tabular-nums">
                                                         ₹{r.wonRevenue?.toLocaleString() || 0}
                                                     </td>
-                                                    <td className="px-3 py-3 bg-[var(--bg-secondary)] border-r border-y border-[var(--border)] rounded-r-xl text-[12px] font-black text-slate-900 text-right tabular-nums">
+                                                    <td className="px-3 py-2.5 bg-[var(--bg-secondary)] border-r border-y border-[var(--border)] rounded-r-xl text-[12px] font-black text-slate-900 text-right tabular-nums">
                                                         ₹{r.revenue.toLocaleString()}
                                                     </td>
                                                 </tr>
@@ -260,24 +260,24 @@ export default function RevenuePage() {
                 );
             })}
 
-{/* Footer Navigation */ }
-<div className="md:px-8 md:py-6 md:border-t border-[var(--border)] flex justify-between items-center p-4 bg-[var(--bg-card)]">
-    <button
-        onClick={() => router.push('/analysis/leads')}
-        className="hidden md:flex items-center gap-2 text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors uppercase tracking-widest"
-    >
-        <ArrowLeft size={16} /> PREVIOUS
-    </button>
-    <div className="hidden md:block text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
-        3 of 5 Diagnostic Steps
-    </div>
-    <button
-        onClick={() => router.push('/analysis/productivity')}
-        className="hidden md:flex bg-zinc-900 dark:bg-black hover:bg-black text-white px-8 py-3 rounded-xl text-xs font-black items-center gap-3 transition-opacity"
-    >
-        NEXT: PRODUCTIVITY <ArrowRight size={16} />
-    </button>
-</div>
+            {/* Footer Navigation */}
+            <div className="md:px-8 md:py-6 md:border-t border-[var(--border)] flex justify-between items-center p-4 bg-[var(--bg-card)]">
+                <button
+                    onClick={() => router.push('/analysis/leads')}
+                    className="hidden md:flex items-center gap-2 text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors uppercase tracking-widest"
+                >
+                    <ArrowLeft size={16} /> PREVIOUS
+                </button>
+                <div className="hidden md:block text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
+                    3 of 5 Diagnostic Steps
+                </div>
+                <button
+                    onClick={() => router.push('/analysis/productivity')}
+                    className="hidden md:flex bg-zinc-900 dark:bg-black hover:bg-black text-white px-8 py-3 rounded-xl text-xs font-black items-center gap-3 transition-opacity"
+                >
+                    NEXT: PRODUCTIVITY <ArrowRight size={16} />
+                </button>
+            </div>
         </div >
     );
 }
