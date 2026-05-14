@@ -62,7 +62,7 @@ export default function SummaryPage() {
                             <div className="text-[8px] font-black opacity-60 uppercase tracking-widest">Health Index</div>
                             <div className="text-xl font-black tabular-nums leading-none">{healthScore}/100</div>
                         </div>
-                        <CheckCircle size={24} />
+                        <CheckCircle size={24} className="text-[var(--success)]" />
                     </div>
                 </div>
             </div>
@@ -70,33 +70,33 @@ export default function SummaryPage() {
             <div className="flex-1 p-4 md:p-8 space-y-6 md:space-y-8">
                 {/* Insight Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm group hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-8 shadow-sm group hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                         <div className="flex items-center gap-3 mb-8">
-                            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl group-hover:scale-110 transition-transform"><CheckCircle size={20} /></div>
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Leads Pipeline</span>
+                            <div className="p-2 bg-[var(--info-soft)] text-[var(--info)] rounded-xl group-hover:scale-110 transition-transform"><CheckCircle size={20} /></div>
+                            <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Leads Pipeline</span>
                         </div>
                         <div className="space-y-6">
                             <div>
-                                <div className="text-4xl font-black text-slate-900 tracking-tight">{leads?.totalLeads?.toLocaleString() ?? 0}</div>
-                                <div className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Verified Lead Volume</div>
+                                <div className="text-4xl font-black text-[var(--text-primary)] tracking-tight">{leads?.totalLeads?.toLocaleString() ?? 0}</div>
+                                <div className="text-[10px] font-bold text-[var(--text-muted)] mt-1 uppercase tracking-widest">Verified Lead Volume</div>
                             </div>
-                            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-[13px] text-slate-500 font-medium leading-relaxed italic">
+                            <div className="p-4 bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border)] text-[13px] text-[var(--text-secondary)] font-medium leading-relaxed italic">
                                 Lead velocity is performing at consistent levels, driven primarily by qualified channel interaction.
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm group hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-8 shadow-sm group hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                         <div className="flex items-center gap-3 mb-8">
-                            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl group-hover:scale-110 transition-transform"><ShieldCheck size={20} /></div>
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Financial Status</span>
+                            <div className="p-2 bg-[var(--success-soft)] text-[var(--success)] rounded-xl group-hover:scale-110 transition-transform"><ShieldCheck size={20} /></div>
+                            <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Financial Status</span>
                         </div>
                         <div className="space-y-6">
                             <div>
-                                <div className="text-4xl font-black text-emerald-600 tracking-tight">₹{revenue?.totalRevenue.toLocaleString() ?? 0}</div>
-                                <div className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Total Gross Revenue</div>
+                                <div className="text-4xl font-black text-[var(--success)] tracking-tight">₹{revenue?.totalRevenue.toLocaleString() ?? 0}</div>
+                                <div className="text-[10px] font-bold text-[var(--text-muted)] mt-1 uppercase tracking-widest">Total Gross Revenue</div>
                             </div>
-                            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-[13px] text-slate-500 font-medium leading-relaxed italic">
+                            <div className="p-4 bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border)] text-[13px] text-[var(--text-secondary)] font-medium leading-relaxed italic">
                                 Average Deal Size is currently holding steady at ₹{revenue?.avgDealSize.toLocaleString() ?? 0}.
                             </div>
                         </div>
@@ -104,15 +104,15 @@ export default function SummaryPage() {
 
                     <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm group hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                         <div className="flex items-center gap-3 mb-8">
-                            <div className="p-2 bg-purple-50 text-purple-600 rounded-xl group-hover:scale-110 transition-transform"><Zap size={20} /></div>
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Workload Health</span>
+                            <div className="p-2 bg-purple-50/10 text-purple-400 rounded-xl group-hover:scale-110 transition-transform"><Zap size={20} /></div>
+                            <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Workload Health</span>
                         </div>
                         <div className="space-y-6">
                             <div>
-                                <div className="text-4xl font-black text-rose-600 tracking-tight">{productivity?.criticalProductivity ?? 0}</div>
-                                <div className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Critical Blockers Detected</div>
+                                <div className="text-4xl font-black text-[var(--danger)] tracking-tight">{productivity?.criticalProductivity ?? 0}</div>
+                                <div className="text-[10px] font-bold text-[var(--text-muted)] mt-1 uppercase tracking-widest">Critical Blockers Detected</div>
                             </div>
-                            <div className="p-4 bg-rose-50 rounded-2xl border border-rose-100 text-[13px] text-rose-600 font-medium leading-relaxed italic">
+                            <div className="p-4 bg-[var(--danger-soft)] rounded-2xl border border-[var(--danger)]/10 text-[13px] text-[var(--danger)] font-medium leading-relaxed italic">
                                 High priority tasks represent {((productivity?.criticalProductivity || 0) / (productivity?.totalTasks || 1) * 100).toFixed(1)}% of total volume. Immediate resource reallocation suggested.
                             </div>
                         </div>
@@ -126,13 +126,13 @@ export default function SummaryPage() {
                     <div className="relative z-10 flex flex-col lg:flex-row gap-12 lg:items-center">
                         <div className="flex-1 space-y-8">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-emerald-400">
+                                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-[var(--success)]">
                                     <Lightbulb size={24} />
                                 </div>
-                                <div className="text-[10px] font-black tracking-widest text-emerald-500 uppercase">AI STRATEGIC RECOMMENDATION</div>
+                                <div className="text-[10px] font-black tracking-widest text-[var(--success)] uppercase">AI STRATEGIC RECOMMENDATION</div>
                             </div>
                             <h3 className="text-2xl md:text-4xl font-black tracking-tight leading-tight text-white">
-                                Optimize Acquisition <span className="text-emerald-500">Funnel Integrity</span>
+                                Optimize Acquisition <span className="text-[var(--success)]">Funnel Integrity</span>
                             </h3>
                             <p className="text-zinc-400 text-sm md:text-base leading-relaxed max-w-2xl font-medium">
                                 Based on your financial data, there is a clear opportunity to increase Lifetime Value (LTV). While acquisition costs (CAC) are stable, focus on checkout flow micro-optimizations over the next 30 days.

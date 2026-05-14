@@ -33,12 +33,16 @@ export default function AIWidget() {
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Reset chat history when the page changes
+  useEffect(() => {
     setChatHistory([{
       role: 'ai',
       content: 'Hello! I am your BHI AI Assistant. How can I help you analyze your business data today?',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }]);
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     if (scrollRef.current) {

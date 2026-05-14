@@ -87,9 +87,9 @@ export default function RevenuePage() {
                 const metrics = dataItem.metrics;
 
                 const kpis = [
-                    { label: 'Total Revenue', rawValue: metrics?.totalRevenue, value: metrics?.totalRevenue ? `₹${metrics.totalRevenue.toLocaleString()}` : '0', icon: DollarSign, color: 'text-zinc-600', bg: 'bg-zinc-50' },
-                    { label: 'Won Revenue', rawValue: metrics?.wonRevenue, value: metrics?.wonRevenue ? `₹${metrics.wonRevenue.toLocaleString()}` : '0', icon: Trophy, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                    { label: 'Qualified Revenue', rawValue: metrics?.qualifiedRevenue, value: metrics?.qualifiedRevenue ? `₹${metrics.qualifiedRevenue.toLocaleString()}` : '0', icon: Target, color: 'text-blue-600', bg: 'bg-blue-50' },
+                    { label: 'Total Revenue', rawValue: metrics?.totalRevenue, value: metrics?.totalRevenue ? `₹${metrics.totalRevenue.toLocaleString()}` : '0', icon: DollarSign, color: 'text-[var(--text-primary)]', bg: 'bg-[var(--bg-secondary)]' },
+                    { label: 'Won Revenue', rawValue: metrics?.wonRevenue, value: metrics?.wonRevenue ? `₹${metrics.wonRevenue.toLocaleString()}` : '0', icon: Trophy, color: 'text-[var(--success)]', bg: 'bg-[var(--success-soft)]' },
+                    { label: 'Qualified Revenue', rawValue: metrics?.qualifiedRevenue, value: metrics?.qualifiedRevenue ? `₹${metrics.qualifiedRevenue.toLocaleString()}` : '0', icon: Target, color: 'text-[var(--info)]', bg: 'bg-[var(--info-soft)]' },
                 ];
 
                 return (
@@ -139,11 +139,11 @@ export default function RevenuePage() {
                                         </h3>
                                     </div>
                                     <div className="flex items-center gap-4">
-                                        <div className="flex items-center gap-1.5 text-[9px] font-black text-emerald-600 uppercase tracking-tighter">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> WON REVENUE
+                                        <div className="flex items-center gap-1.5 text-[9px] font-black text-[var(--success)] uppercase tracking-tighter">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-[var(--success)]" /> WON REVENUE
                                         </div>
-                                        <div className="flex items-center gap-1.5 text-[9px] font-black text-amber-600 uppercase tracking-tighter">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500" /> TOTAL REVENUE
+                                        <div className="flex items-center gap-1.5 text-[9px] font-black text-[var(--warning)] uppercase tracking-tighter">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-[var(--warning)]" /> TOTAL REVENUE
                                         </div>
                                     </div>
                                 </div>
@@ -168,8 +168,8 @@ export default function RevenuePage() {
                                         <thead>
                                             <tr>
                                                 <th className="px-3 py-2 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Region</th>
-                                                <th className="px-3 py-2 text-[10px] font-black text-emerald-600 uppercase tracking-widest text-right">Won Revenue</th>
-                                                <th className="px-3 py-2 text-[10px] font-black text-slate-900 uppercase tracking-widest text-right">Total Revenue</th>
+                                                <th className="px-3 py-2 text-[10px] font-black text-[var(--success)] uppercase tracking-widest text-right">Won Revenue</th>
+                                                <th className="px-3 py-2 text-[10px] font-black text-[var(--text-primary)] uppercase tracking-widest text-right">Total Revenue</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -178,10 +178,10 @@ export default function RevenuePage() {
                                                     <td className="px-3 py-2.5 bg-[var(--bg-secondary)] border-l border-y border-[var(--border)] rounded-l-xl text-[11px] font-bold text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors uppercase truncate">
                                                         {r.region}
                                                     </td>
-                                                    <td className="px-3 py-2.5 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-emerald-600 text-right tabular-nums">
+                                                    <td className="px-3 py-2.5 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-[var(--success)] text-right tabular-nums">
                                                         ₹{r.wonRevenue?.toLocaleString() || 0}
                                                     </td>
-                                                    <td className="px-3 py-2.5 bg-[var(--bg-secondary)] border-r border-y border-[var(--border)] rounded-r-xl text-[12px] font-black text-slate-900 text-right tabular-nums">
+                                                    <td className="px-3 py-2.5 bg-[var(--bg-secondary)] border-r border-y border-[var(--border)] rounded-r-xl text-[12px] font-black text-[var(--text-primary)] text-right tabular-nums">
                                                         ₹{r.revenue.toLocaleString()}
                                                     </td>
                                                 </tr>

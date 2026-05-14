@@ -285,25 +285,25 @@ export default function ProductivityPage() {
                                 {metrics?.projectSummary.map((ps, idx) => {
                                     const isCompletedRow = ps.row_type === 'completed';
                                     return (
-                                        <tr key={`${ps.project}-${idx}`} className={`group transition-colors ${isCompletedRow ? 'bg-emerald-50/30' : 'hover:bg-[var(--bg-secondary)]'}`}>
-                                            <td className={`py-4 text-sm whitespace-nowrap ${isCompletedRow ? 'text-emerald-700 font-medium pl-8' : 'font-bold'}`}>
+                                        <tr key={`${ps.project}-${idx}`} className={`group transition-colors ${isCompletedRow ? 'bg-[var(--success-soft)]' : 'hover:bg-[var(--bg-secondary)]'}`}>
+                                            <td className={`py-4 text-sm whitespace-nowrap ${isCompletedRow ? 'text-[var(--success)] font-medium pl-8' : 'font-bold'}`}>
                                                 {ps.project}
                                             </td>
                                             {metrics?.projectSummaryColumns?.map(col => {
-                                                let colorClass = isCompletedRow ? "text-emerald-600" : "text-[var(--text-primary)]";
+                                                let colorClass = isCompletedRow ? "text-[var(--success)]" : "text-[var(--text-primary)]";
 
                                                 if (!isCompletedRow) {
-                                                    if (col === 'High') colorClass = "text-emerald-600";
-                                                    if (col === 'Medium') colorClass = "text-amber-600";
-                                                    if (col === 'Low') colorClass = "text-rose-600";
-                                                    if (col === 'Critical') colorClass = "text-rose-900";
+                                                    if (col === 'High') colorClass = "text-[var(--success)]";
+                                                    if (col === 'Medium') colorClass = "text-[var(--warning)]";
+                                                    if (col === 'Low') colorClass = "text-[var(--danger)]";
+                                                    if (col === 'Critical') colorClass = "text-[var(--danger)]";
 
                                                     // Status-based coloring fallback
                                                     const lowerCol = col.toLowerCase();
-                                                    if (lowerCol.includes('complete') || lowerCol.includes('done')) colorClass = "text-emerald-600";
-                                                    if (lowerCol.includes('progress') || lowerCol.includes('active')) colorClass = "text-blue-600";
-                                                    if (lowerCol.includes('pending') || lowerCol.includes('todo')) colorClass = "text-amber-600";
-                                                    if (lowerCol.includes('stuck') || lowerCol.includes('block')) colorClass = "text-rose-700";
+                                                    if (lowerCol.includes('complete') || lowerCol.includes('done')) colorClass = "text-[var(--success)]";
+                                                    if (lowerCol.includes('progress') || lowerCol.includes('active')) colorClass = "text-[var(--info)]";
+                                                    if (lowerCol.includes('pending') || lowerCol.includes('todo')) colorClass = "text-[var(--warning)]";
+                                                    if (lowerCol.includes('stuck') || lowerCol.includes('block')) colorClass = "text-[var(--danger)]";
                                                 }
 
                                                 return (
@@ -312,7 +312,7 @@ export default function ProductivityPage() {
                                                     </td>
                                                 );
                                             })}
-                                            <td className={`py-4 text-sm font-black text-center ${isCompletedRow ? 'text-emerald-700' : 'text-slate-900'}`}>
+                                            <td className={`py-4 text-sm font-black text-center ${isCompletedRow ? 'text-[var(--success)]' : 'text-[var(--text-primary)]'}`}>
                                                 {ps.Total || 0}
                                             </td>
                                         </tr>
@@ -343,8 +343,8 @@ export default function ProductivityPage() {
                                     <tr key={p.name} className="group hover:bg-[var(--bg-secondary)] transition-colors">
                                         <td className="py-4 text-sm font-bold whitespace-nowrap">{p.name}</td>
                                         <td className="py-4 text-sm font-black text-center">{p.tasks}</td>
-                                        <td className="py-4 text-sm font-black text-center text-emerald-600">{p.resolved || 0}</td>
-                                        <td className="py-4 text-sm font-black text-center text-blue-600">{p.rate}%</td>
+                                        <td className="py-4 text-sm font-black text-center text-[var(--success)]">{p.resolved || 0}</td>
+                                        <td className="py-4 text-sm font-black text-center text-[var(--info)]">{p.rate}%</td>
                                     </tr>
                                 ))}
                             </tbody>

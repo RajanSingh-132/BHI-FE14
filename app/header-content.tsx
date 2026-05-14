@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from '@/lib/theme';
-import { Sun, Moon, Bell, Settings } from 'lucide-react';
+import { Sun, Moon, Bell, Settings, Activity } from 'lucide-react';
 import { useDataset } from '@/lib/store';
 
 export function HeaderContent() {
@@ -23,7 +23,17 @@ export function HeaderContent() {
     <header className="h-[60px] md:h-[80px] bg-[var(--bg)] flex items-center justify-between px-5 md:px-[60px] border-b border-[var(--border)] z-[100] shrink-0">
       <div className="flex-1 flex items-center">
         <Link href="/" className="no-underline">
-          <span className="font-inter text-xl md:text-[28px] font-[800] text-[var(--text-primary)] tracking-tighter leading-none antialiased">
+          <span className="font-inter text-xl md:text-[28px] font-[800] text-[var(--text-primary)] tracking-tighter leading-none antialiased inline-flex items-center gap-2">
+            <span
+              className={`inline-flex h-8 w-8 items-center justify-center rounded-sm border ${
+                theme === 'light'
+                  ? 'bg-emerald-50 text-emerald-500 border-emerald-100'
+                  : 'bg-[#151f3b] text-[#d4af37] border-[#27345c]'
+              }`}
+              aria-hidden="true"
+            >
+              <Activity size={18} strokeWidth={2.6} />
+            </span>
             Business Health Index
           </span>
         </Link>

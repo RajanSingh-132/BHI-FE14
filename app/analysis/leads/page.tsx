@@ -114,19 +114,19 @@ export default function LeadsPage() {
 
                 const dynamicKPIs = [
                     // Row 1: Counts
-                    { label: 'Total Leads', value: metrics?.totalLeads ?? 0, icon: Users, bg: 'bg-amber-50', color: 'text-amber-600' },
-                    { label: count1Label, value: count1Value, icon: CheckCircle, bg: 'bg-emerald-50', color: 'text-emerald-600' },
-                    { label: count2Label, value: count2Value, icon: Target, bg: 'bg-blue-50', color: 'text-blue-600' },
-                    { label: count3Label, value: count3Value, icon: Users, bg: 'bg-indigo-50', color: 'text-indigo-600' },
-                    { label: 'Conv. Rate', value: `${metrics?.conversionRate ?? 0}%`, icon: Zap, bg: 'bg-zinc-50', color: 'text-zinc-600' },
+                    { label: 'Total Leads', value: metrics?.totalLeads ?? 0, icon: Users, bg: 'bg-[var(--warning-soft)]', color: 'text-[var(--warning)]' },
+                    { label: count1Label, value: count1Value, icon: CheckCircle, bg: 'bg-[var(--success-soft)]', color: 'text-[var(--success)]' },
+                    { label: count2Label, value: count2Value, icon: Target, bg: 'bg-[var(--info-soft)]', color: 'text-[var(--info)]' },
+                    { label: count3Label, value: count3Value, icon: Users, bg: 'bg-indigo-50/10', color: 'text-indigo-400' },
+                    { label: 'Conv. Rate', value: `${metrics?.conversionRate ?? 0}%`, icon: Zap, bg: 'bg-[var(--bg-secondary)]', color: 'text-[var(--text-primary)]' },
 
                     // Row 2: Financials/Performance
-                    { label: 'Total Revenue', value: `₹${(metrics?.totalRevenue ?? 0).toLocaleString()}`, icon: TrendingUp, bg: 'bg-zinc-50', color: 'text-zinc-600' },
-                    { label: rev1Label, value: `₹${rev1Value.toLocaleString()}`, icon: TrendingUp, bg: 'bg-emerald-50', color: 'text-emerald-600' },
-                    { label: rev2Label, value: `₹${rev2Value.toLocaleString()}`, icon: TrendingUp, bg: 'bg-blue-50', color: 'text-blue-600' },
-                    { label: rev3Label, value: `₹${rev3Value.toLocaleString()}`, icon: Users, bg: 'bg-indigo-50', color: 'text-indigo-600' },
+                    { label: 'Total Revenue', value: `₹${(metrics?.totalRevenue ?? 0).toLocaleString()}`, icon: TrendingUp, bg: 'bg-[var(--bg-secondary)]', color: 'text-[var(--text-primary)]' },
+                    { label: rev1Label, value: `₹${rev1Value.toLocaleString()}`, icon: TrendingUp, bg: 'bg-[var(--success-soft)]', color: 'text-[var(--success)]' },
+                    { label: rev2Label, value: `₹${rev2Value.toLocaleString()}`, icon: TrendingUp, bg: 'bg-[var(--info-soft)]', color: 'text-[var(--info)]' },
+                    { label: rev3Label, value: `₹${rev3Value.toLocaleString()}`, icon: Users, bg: 'bg-indigo-50/10', color: 'text-indigo-400' },
 
-                    { label: 'Cost/Lead', value: `₹${metrics?.costPerLead ?? 0}`, icon: TrendingUp, bg: 'bg-rose-50', color: 'text-rose-600' },
+                    { label: 'Cost/Lead', value: `₹${metrics?.costPerLead ?? 0}`, icon: TrendingUp, bg: 'bg-[var(--danger-soft)]', color: 'text-[var(--danger)]' },
                 ];
 
                 const hasWon = metrics?.topSources?.some(s => (s.won ?? 0) > 0);
@@ -310,14 +310,14 @@ export default function LeadsPage() {
                                         <thead>
                                             <tr>
                                                 <th className="px-3 py-2 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Source</th>
-                                                {hasWon && <th className="px-3 py-2 text-[10px] font-black text-emerald-600 uppercase tracking-widest text-center">{metrics?.sourceLabels?.won || 'Won'}</th>}
-                                                {hasQualified && <th className="px-3 py-2 text-[10px] font-black text-blue-600 uppercase tracking-widest text-center">{metrics?.sourceLabels?.qualified || 'Qualified'}</th>}
-                                                {hasContacted && <th className="px-3 py-2 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">Contacted</th>}
+                                                {hasWon && <th className="px-3 py-2 text-[10px] font-black text-[var(--success)] uppercase tracking-widest text-center">{metrics?.sourceLabels?.won || 'Won'}</th>}
+                                                {hasQualified && <th className="px-3 py-2 text-[10px] font-black text-[var(--info)] uppercase tracking-widest text-center">{metrics?.sourceLabels?.qualified || 'Qualified'}</th>}
+                                                {hasContacted && <th className="px-3 py-2 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest text-center">Contacted</th>}
                                                 <th className="px-3 py-2 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest text-center">Total Leads</th>
-                                                {hasRevenue && <th className="px-3 py-2 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest text-right">Revenue</th>}
-                                                {hasCost && <th className="px-3 py-2 text-[10px] font-black text-rose-600 uppercase tracking-widest text-right">Cost</th>}
-                                                {hasProfit && <th className="px-3 py-2 text-[10px] font-black text-amber-600 uppercase tracking-widest text-right">Profit</th>}
-                                                {hasTotalRevenue && <th className="px-3 py-2 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest text-right">Total Revenue</th>}
+                                                {hasRevenue && <th className="px-3 py-2 text-[10px] font-black text-[var(--text-primary)] uppercase tracking-widest text-right">Revenue</th>}
+                                                {hasCost && <th className="px-3 py-2 text-[10px] font-black text-[var(--danger)] uppercase tracking-widest text-right">Cost</th>}
+                                                {hasProfit && <th className="px-3 py-2 text-[10px] font-black text-[var(--warning)] uppercase tracking-widest text-right">Profit</th>}
+                                                {hasTotalRevenue && <th className="px-3 py-2 text-[10px] font-black text-[var(--text-primary)] uppercase tracking-widest text-right">Total Revenue</th>}
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -327,17 +327,17 @@ export default function LeadsPage() {
                                                         {source.source}
                                                     </td>
                                                     {hasWon && (
-                                                        <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-emerald-600 text-center tabular-nums">
+                                                        <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-[var(--success)] text-center tabular-nums">
                                                             {source.won?.toLocaleString() ?? 0}
                                                         </td>
                                                     )}
                                                     {hasQualified && (
-                                                        <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-blue-600 text-center tabular-nums">
+                                                        <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-[var(--info)] text-center tabular-nums">
                                                             {source.qualified?.toLocaleString() ?? 0}
                                                         </td>
                                                     )}
                                                     {hasContacted && (
-                                                        <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-zinc-500 text-center tabular-nums">
+                                                        <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-[var(--text-muted)] text-center tabular-nums">
                                                             {source.contacted?.toLocaleString() ?? 0}
                                                         </td>
                                                     )}
@@ -345,22 +345,22 @@ export default function LeadsPage() {
                                                         {source.count.toLocaleString()}
                                                     </td>
                                                     {hasRevenue && (
-                                                        <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-[var(--text-muted)] text-right tabular-nums">
+                                                        <td className="px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-[var(--text-primary)] text-right tabular-nums">
                                                             ₹{source.revenue?.toLocaleString() ?? 0}
                                                         </td>
                                                     )}
                                                     {hasCost && (
-                                                        <td className={`px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-rose-600 text-right tabular-nums ${(!hasProfit && !hasTotalRevenue) ? 'border-r rounded-r-xl' : ''}`}>
+                                                        <td className={`px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-[var(--danger)] text-right tabular-nums ${(!hasProfit && !hasTotalRevenue) ? 'border-r rounded-r-xl' : ''}`}>
                                                             ₹{source.cost?.toLocaleString() ?? 0}
                                                         </td>
                                                     )}
                                                     {hasProfit && (
-                                                        <td className={`px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-amber-600 dark:text-amber-400 text-right tabular-nums ${!hasTotalRevenue ? 'border-r rounded-r-xl' : ''}`}>
+                                                        <td className={`px-3 py-3 bg-[var(--bg-secondary)] border-y border-[var(--border)] text-[12px] font-black text-[var(--warning)] text-right tabular-nums ${!hasTotalRevenue ? 'border-r rounded-r-xl' : ''}`}>
                                                             ₹{source.profit?.toLocaleString() ?? 0}
                                                         </td>
                                                     )}
                                                     {hasTotalRevenue && (
-                                                        <td className="px-3 py-3 bg-[var(--bg-secondary)] border-r border-y border-[var(--border)] rounded-r-xl text-[12px] font-black text-[var(--text-muted)] text-right tabular-nums">
+                                                        <td className="px-3 py-3 bg-[var(--bg-secondary)] border-r border-y border-[var(--border)] rounded-r-xl text-[12px] font-black text-[var(--text-primary)] text-right tabular-nums">
                                                             ₹{source.totalRevenue?.toLocaleString() ?? 0}
                                                         </td>
                                                     )}
