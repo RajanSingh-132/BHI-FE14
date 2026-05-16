@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { Bot, X, Send, RotateCcw, Sparkles, MessageSquare, Minus, Maximize2 } from 'lucide-react';
+import { Bot, X, Send, RotateCcw, Sparkles, MessageSquare, Minus, Maximize2, ChevronDown } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 import { useTheme } from '@/lib/theme';
-import { fetchApi } from '@/lib/api';
+import { fetchChatStream } from '@/lib/api';
 import { useDataset } from '@/lib/store';
 
 function cn(...inputs: ClassValue[]) {
@@ -29,6 +29,7 @@ export default function AIWidget() {
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,10 +46,27 @@ export default function AIWidget() {
   }, [pathname]);
 
   useEffect(() => {
-    if (scrollRef.current) {
+    if (scrollRef.current && !showScrollButton) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [chatHistory, isTyping]);
+  }, [chatHistory, isTyping, showScrollButton]);
+
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    // Show button if scrolled up by more than 50px
+    const isScrolledUp = scrollHeight - scrollTop - clientHeight > 50;
+    setShowScrollButton(isScrolledUp);
+  };
+
+  const scrollToBottom = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const handleRefresh = () => {
     setChatHistory([
@@ -65,16 +83,19 @@ export default function AIWidget() {
     if (!message.trim() || isTyping) return;
 
     const userMessage = message.trim();
-    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const userTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const aiTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    const newHistory = [...chatHistory, { role: 'human' as const, content: userMessage, timestamp }];
-    setChatHistory(newHistory);
+    const humanMessage = { role: 'human' as const, content: userMessage, timestamp: userTimestamp };
+    const historyWithoutPlaceholder = [...chatHistory, humanMessage];
+
+    setChatHistory([...historyWithoutPlaceholder, { role: 'ai', content: '', timestamp: aiTimestamp }]);
     setMessage('');
     setIsTyping(true);
 
     try {
       // Prepare history for API (backend expects 'human'/'ai')
-      const apiHistory = newHistory.map(msg => ({
+      const apiHistory = historyWithoutPlaceholder.map(msg => ({
         role: msg.role,
         content: msg.content,
         type: 'text'
@@ -82,36 +103,69 @@ export default function AIWidget() {
 
       // Dynamically select endpoint based on pathname (case-insensitive)
       const path = pathname.toLowerCase();
-      let endpoint = '/api/summary-chat'; // Default to summary instead of non-existent /api/chat
+      let endpoint = '/api/summary-chat-stream'; // Default to summary instead of non-existent /api/chat
       
-      if (path.includes('leads')) endpoint = '/api/leads-chat';
-      else if (path.includes('sales')) endpoint = '/api/sales-chat';
-      else if (path.includes('productivity')) endpoint = '/api/productivity-chat';
-      else if (path.includes('summary')) endpoint = '/api/summary-chat';
+      if (path.includes('leads')) endpoint = '/api/leads-chat-stream';
+      else if (path.includes('sales')) endpoint = '/api/sales-chat-stream';
+      else if (path.includes('productivity')) endpoint = '/api/productivity-chat-stream';
+      else if (path.includes('summary')) endpoint = '/api/summary-chat-stream';
 
-      const response = await fetchApi<{ answer: string; type?: string }>(endpoint, {
-        method: 'POST',
-        body: JSON.stringify({
+      let streamedAnswer = '';
+      const response = await fetchChatStream(
+        endpoint,
+        {
           chat_history: apiHistory,
           context: pathname,
           dashboard_summary: dashboardSummary
-        }),
+        },
+        (chunk) => {
+          if (!chunk) return;
+          streamedAnswer += chunk;
+          setIsTyping(false);
+          setChatHistory(prev => {
+            const next = [...prev];
+            const lastIndex = next.length - 1;
+            if (lastIndex >= 0 && next[lastIndex].role === 'ai') {
+              next[lastIndex] = {
+                ...next[lastIndex],
+                content: `${next[lastIndex].content}${chunk}`
+              };
+            }
+            return next;
+          });
+        }
+      );
+
+      const resolvedAnswer = response.answer || streamedAnswer;
+      setChatHistory(prev => {
+        const next = [...prev];
+        const lastIndex = next.length - 1;
+        if (lastIndex >= 0 && next[lastIndex].role === 'ai') {
+          next[lastIndex] = {
+            ...next[lastIndex],
+            content: resolvedAnswer || "I'm sorry, I couldn't generate a response."
+          };
+        }
+        return next;
       });
-
-      const responseTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      setChatHistory(prev => [...prev, {
-        role: 'ai',
-        content: response.answer,
-        timestamp: responseTimestamp
-      }]);
     } catch (error) {
       console.error('Chat Error:', error);
-      setChatHistory(prev => [...prev, {
-        role: 'ai',
-        content: "I'm sorry, I encountered an error. Please ensure your data is loaded and try again.",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }]);
+      setChatHistory(prev => {
+        const next = [...prev];
+        const lastIndex = next.length - 1;
+        if (lastIndex >= 0 && next[lastIndex].role === 'ai') {
+          next[lastIndex] = {
+            ...next[lastIndex],
+            content: "I'm sorry, I encountered an error. Please ensure your data is loaded and try again."
+          };
+          return next;
+        }
+        return [...prev, {
+          role: 'ai',
+          content: "I'm sorry, I encountered an error. Please ensure your data is loaded and try again.",
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }];
+      });
     } finally {
       setIsTyping(false);
     }
@@ -172,10 +226,12 @@ export default function AIWidget() {
         </div>
 
         {/* Messages */}
-        <div
-          ref={scrollRef}
-          className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide bg-gradient-to-b from-[var(--bg)] to-[var(--bg-secondary)]"
-        >
+        <div className="flex-1 relative min-h-0">
+          <div
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className="absolute inset-0 overflow-y-auto p-4 space-y-4 scrollbar-hide bg-gradient-to-b from-[var(--bg)] to-[var(--bg-secondary)]"
+          >
           {chatHistory.map((msg, idx) => (
             <div
               key={idx}
@@ -191,12 +247,20 @@ export default function AIWidget() {
                   : "bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] rounded-tl-none shadow-sm"
               )}>
                 {msg.role === 'ai' ? (
-                  <div
-                    className="prose prose-sm dark:prose-invert max-w-none 
-                      [&_p]:mb-3 [&_p:last-child]:mb-0 
-                      [&_strong]:font-bold [&_strong]:text-[var(--accent)]"
-                    dangerouslySetInnerHTML={{ __html: msg.content }}
-                  />
+                  msg.content ? (
+                    <div
+                      className="prose prose-sm dark:prose-invert max-w-none 
+                        [&_p]:mb-3 [&_p:last-child]:mb-0 
+                        [&_strong]:font-bold [&_strong]:text-[var(--accent)]"
+                      dangerouslySetInnerHTML={{ __html: msg.content }}
+                    />
+                  ) : (
+                    <div className="flex gap-1 items-center h-5">
+                      <div className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce [animation-delay:-0.3s]" />
+                      <div className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce [animation-delay:-0.15s]" />
+                      <div className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce" />
+                    </div>
+                  )
                 ) : (
                   msg.content
                 )}
@@ -217,16 +281,18 @@ export default function AIWidget() {
               )}
             </div>
           ))}
-          {isTyping && (
-            <div className="flex items-start gap-2 mr-auto">
-              <div className="bg-[var(--bg-card)] border border-[var(--border)] px-4 py-3 rounded-2xl rounded-tl-none shadow-sm">
-                <div className="flex gap-1">
-                  <div className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce [animation-delay:-0.3s]" />
-                  <div className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce [animation-delay:-0.15s]" />
-                  <div className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce" />
-                </div>
-              </div>
-            </div>
+          </div>
+          {showScrollButton && (
+            <button
+              onClick={scrollToBottom}
+              className={cn(
+                "absolute bottom-4 right-1/2 translate-x-1/2 p-2 rounded-full shadow-md border z-10 transition-all animate-in fade-in slide-in-from-bottom-2",
+                "bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--accent)] hover:border-[var(--accent)]"
+              )}
+              title="Scroll to bottom"
+            >
+              <ChevronDown size={20} />
+            </button>
           )}
         </div>
 
